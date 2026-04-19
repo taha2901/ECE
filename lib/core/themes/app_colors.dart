@@ -3,24 +3,25 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Palette - Deep Indigo + Teal Accent (Professional E-commerce)
-  static const Color primary = Color(0xFF1B1B3A);        // أغمق من قبل
-  static const Color primaryVariant = Color(0xFF151A35); 
-  static const Color secondary = Color(0xFF0D274D);      // أعمق وأكثر عمق
-  static const Color accent = Color(0xFF008080);         // Teal غامق وراقي
-  static const Color accentLight = Color(0xFF00B2B2);    // Gradient خفيف للaccent
+  // Core Palette — Obsidian + Emerald Teal
+  static const Color primary = Color(0xFF0A0F1E);
+  static const Color primaryVariant = Color(0xFF131929);
+  static const Color secondary = Color(0xFF1C2640);
+  static const Color accent = Color(0xFF00C6A7);        // vivid teal
+  static const Color accentDeep = Color(0xFF009B85);
+  static const Color accentLight = Color(0xFF5EECD8);
 
   // Neutrals
   static const Color white = Color(0xFFFFFFFF);
-  static const Color background = Color(0xFFF4F5FB);     // فاتح ونظيف
+  static const Color background = Color(0xFFF6F8FC);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFE8EBF7); 
-  static const Color divider = Color(0xFFDDE1EB);
+  static const Color surfaceVariant = Color(0xFFF0F3FA);
+  static const Color divider = Color(0xFFE4E9F2);
 
   // Text
-  static const Color textPrimary = Color(0xFF1B1B3A);    // عميق واحترافي
-  static const Color textSecondary = Color(0xFF5E6478);  // محايد وهادئ
-  static const Color textHint = Color(0xFFA0A6B2);       // أنعم من قبل
+  static const Color textPrimary = Color(0xFF0D1226);
+  static const Color textSecondary = Color(0xFF5B6478);
+  static const Color textHint = Color(0xFFAAB2C4);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnAccent = Color(0xFFFFFFFF);
 
@@ -34,7 +35,7 @@ class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primary, secondary],
+    colors: [Color(0xFF0A0F1E), Color(0xFF1C2640)],
   );
 
   static const LinearGradient accentGradient = LinearGradient(
@@ -43,36 +44,53 @@ class AppColors {
     colors: [accent, accentLight],
   );
 
-  static const LinearGradient cardGradient = LinearGradient(
+  static const LinearGradient bannerGradient1 = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF5C6BC0), Color(0xFF7B5EB3)], // Gradient أعمق للكروت
+    colors: [Color(0xFF0A0F1E), Color(0xFF1C2640)],
   );
 
-  // Shadows (not const because we use opacity)
+  static const LinearGradient bannerGradient2 = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF00C6A7), Color(0xFF009B85)],
+  );
+
+  static const LinearGradient bannerGradient3 = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF6C47FF), Color(0xFF9B6DFF)],
+  );
+
+  // Shadows
   static final List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0xFF1B1B3A).withOpacity(0.08),
-      blurRadius: 20,
-      offset: const Offset(0, 4),
+      color: const Color(0xFF0D1226).withOpacity(0.07),
+      blurRadius: 24,
+      spreadRadius: 0,
+      offset: const Offset(0, 6),
     ),
   ];
 
   static final List<BoxShadow> accentShadow = [
     BoxShadow(
-      color: Color(0xFF008080).withOpacity(0.35),
-      blurRadius: 16,
-      offset: const Offset(0, 6),
+      color: const Color(0xFF00C6A7).withOpacity(0.38),
+      blurRadius: 20,
+      spreadRadius: 0,
+      offset: const Offset(0, 8),
     ),
   ];
 
-  // Stars / Rating
+  static final List<BoxShadow> floatShadow = [
+    BoxShadow(
+      color: const Color(0xFF0D1226).withOpacity(0.12),
+      blurRadius: 32,
+      spreadRadius: 0,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  // Stars
   static const Color starFilled = Color(0xFFFBBF24);
   static const Color starEmpty = Color(0xFFE5E7EB);
-
-  // Admin Dashboard
-  static const Color adminPrimary = Color(0xFF1E293B);
-  static const Color adminSidebar = Color(0xFF0F172A);
-  static const Color adminAccent = Color(0xFF6366F1);
-  static const Color adminCard = Color(0xFF1E293B);
 }
