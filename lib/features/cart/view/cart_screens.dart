@@ -221,7 +221,7 @@ class _CartSummarySectionState extends State<CartSummarySection> {
               context.go(AppRoutes.checkout);
             },
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 85),
         ],
       ),
     );
