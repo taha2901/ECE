@@ -66,26 +66,40 @@ class ProductModel {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      price: json['price'] as String,
-      category: json['category'] as int,
-      categoryName: json['category_name'] as String,
-      image: json['image'] as String,
-      description: json['description'] as String,
-      variants: (json['variants'] as List<dynamic>)
-          .map((e) => VariantModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      isAvailable: json['is_available'] as bool,
-      rating: (json['rating'] as num).toDouble(),
-      reviews: json['reviews'] as int,
-      inStock: json['in_stock'] as bool,
-      featured: json['featured'] as bool,
-      trending: json['trending'] as bool,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-    );
+    try {
+      final variantsList = json['variants'] as List<dynamic>?;
+      final variants = variantsList != null
+          ? variantsList
+              .map((e) => VariantModel.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : <VariantModel>[];
+
+      return ProductModel(
+        id: json['id'] as int,
+        name: json['name'] as String,
+        price: json['price'] as String,
+        category: json['category'] as int,
+        categoryName: json['category_name'] as String? ?? 'Unknown',
+        image: json['image'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        variants: variants,
+        isAvailable: json['is_available'] as bool? ?? true,
+        rating: ((json['rating'] as num?) ?? 0).toDouble(),
+        reviews: json['reviews'] as int? ?? 0,
+        inStock: json['in_stock'] as bool? ?? true,
+        featured: json['featured'] as bool? ?? false,
+        trending: json['trending'] as bool? ?? false,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'] as String)
+            : DateTime.now(),
+        updatedAt: json['updated_at'] != null
+            ? DateTime.parse(json['updated_at'] as String)
+            : DateTime.now(),
+      );
+    } catch (e) {
+      print('Error parsing product: $e');
+      rethrow;
+    }
   }
 
   /// Computed helpers
@@ -95,11 +109,26 @@ class ProductModel {
   String get formattedReviews =>
       reviews >= 1000 ? '${(reviews / 1000).toStringAsFixed(1)}k' : '$reviews';
 
-  List<String> get availableColors => variants.map((v) => v.color).toList();
-  List<String> get availableSizes => variants
-      .expand((v) => v.sizes.map((s) => s.size))
-      .toSet()
-      .toList();
+  List<String> get availableColors {
+    try {
+      return variants.map((v) => v.color).toList();
+    } catch (e) {
+      print('Error getting availableColors: $e');
+      return [];
+    }
+  }
+
+  List<String> get availableSizes {
+    try {
+      return variants
+          .expand((v) => v.sizes.map((s) => s.size))
+          .toSet()
+          .toList();
+    } catch (e) {
+      print('Error getting availableSizes: $e');
+      return [];
+    }
+  }
 }
 
 class VariantModel {
@@ -120,15 +149,20 @@ class VariantModel {
   });
 
   factory VariantModel.fromJson(Map<String, dynamic> json) {
+    final sizesData = json['sizes'];
+    final parsedSizes = sizesData is List<dynamic>
+        ? sizesData
+            .map((e) => SizeModel.fromJson(e as Map<String, dynamic>))
+            .toList()
+        : <SizeModel>[];
+
     return VariantModel(
-      id: json['id'] as int,
-      color: json['color'] as String,
-      colorHex: json['color_hex'] as String,
-      image: json['image'] as String,
-      totalStock: json['total_stock'] as int,
-      sizes: (json['sizes'] as List<dynamic>)
-          .map((e) => SizeModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      id: json['id'] as int? ?? 0,
+      color: json['color'] as String? ?? '',
+      colorHex: json['color_hex'] as String? ?? '',
+      image: json['image'] as String? ?? '',
+      totalStock: json['total_stock'] as int? ?? 0,
+      sizes: parsedSizes,
     );
   }
 }

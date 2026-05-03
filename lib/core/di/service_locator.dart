@@ -13,6 +13,10 @@ import 'package:real_ecommerce/features/home/logic/category_cubit.dart';
 import 'package:real_ecommerce/features/home/logic/product_cubit.dart';
 import 'package:real_ecommerce/features/wishlist/data/repo/wishlist_repository.dart';
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
+import 'package:real_ecommerce/features/checkout/data/repo/checkout_repository.dart';
+import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
+import 'package:real_ecommerce/features/orders/data/repo/orders_repository.dart';
+import 'package:real_ecommerce/features/orders/logic/cubit.dart' as orders;
 
 final sl = GetIt.instance;
 
@@ -43,4 +47,16 @@ Future<void> initDependencies() async {
       () => WishlistRepository(sl<Dio>()));
   sl.registerFactory<WishlistCubit>(
       () => WishlistCubit(sl<WishlistRepository>()));
+
+  // ✅ Checkout
+  sl.registerLazySingleton<CheckoutRepository>(
+      () => CheckoutRepository(sl<ApiService>()));
+  sl.registerFactory<CheckoutCubit>(
+      () => CheckoutCubit(sl<CheckoutRepository>(), sl<AuthCubit>()));
+
+  // ✅ Orders
+  sl.registerLazySingleton<OrdersRepository>(
+      () => OrdersRepository(sl<ApiService>()));
+  sl.registerFactory<orders.OrdersCubit>(
+      () => orders.OrdersCubit(sl<OrdersRepository>()));
 }

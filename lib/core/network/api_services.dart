@@ -37,4 +37,25 @@ class ApiService {
   Future<Response> getCategoryById(int id) async {
     return await _dio.get(ApiConstants.getCategoryDetails(id));
   }
+
+  // =================== Cart ===================
+  Future<Response> getCartTotal() async {
+    return await _dio.get(ApiConstants.cartTotal);
+  }
+
+  // =================== Orders ===================
+  Future<Response> createOrder(Map<String, dynamic> body) async {
+    return await _dio.post(
+      ApiConstants.orders,
+      data: body,
+    );
+  }
+
+  Future<Response> getOrders() async {
+    return await _dio.get(ApiConstants.orders);
+  }
+
+  Future<Response> getOrderDetails(int id) async {
+    return await _dio.get(ApiConstants.orderDetails(id));
+  }
 }

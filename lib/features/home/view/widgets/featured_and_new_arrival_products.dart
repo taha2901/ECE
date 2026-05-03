@@ -30,6 +30,31 @@ class FeaturedProductsRow extends StatelessWidget {
               return const _ProductsShimmer(isRow: true);
             }
 
+            if (productState is ProductError) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pagePadding),
+                child: SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: ${productState.message}'),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProductCubit>().retry();
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
             if (productState is! ProductLoaded) {
               return const SizedBox.shrink();
             }
@@ -85,6 +110,31 @@ class NewArrivalsGrid extends StatelessWidget {
           builder: (context, productState) {
             if (productState is ProductLoading) {
               return const _ProductsShimmer(isRow: false);
+            }
+
+            if (productState is ProductError) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pagePadding),
+                child: SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: ${productState.message}'),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProductCubit>().retry();
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
             }
 
             if (productState is! ProductLoaded) {

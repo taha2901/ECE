@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:real_ecommerce/core/network/api_result.dart';
 import 'package:real_ecommerce/features/home/data/models/product_model.dart';
 import 'package:real_ecommerce/features/home/data/repo/home_repository.dart';
 
@@ -56,6 +55,11 @@ class ProductCubit extends Cubit<ProductState> {
         final midpoint = (products.length / 2).ceil();
         final featured = products.take(midpoint).toList();
         final trending = products.skip(midpoint).toList();
+        
+        // Log للتتبع
+        print('✅ Products loaded: ${products.length} products');
+        print('Featured: ${featured.length}, Trending: ${trending.length}');
+        
         emit(ProductLoaded(
           products: products,
           featured: featured,
@@ -63,7 +67,8 @@ class ProductCubit extends Cubit<ProductState> {
         ));
       },
       failure: (error) {
-        emit(ProductError(error.toString()));
+        print('❌ Error loading products: ${error.toString()}');
+        emit(ProductError(error.apiErrorModel.readableMessage));
       },
     );
   }

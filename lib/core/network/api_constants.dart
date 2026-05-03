@@ -93,6 +93,11 @@ class ApiConstants {
   static const String createExpense = "/billing/expenses/create/";
 
   static const String cashbox = "/billing/cashbox/";
+
+  // =================== Cart & Orders ===================
+  static const String cartTotal = '/cart/total/';
+  static const String orders = '/orders/';
+  static String orderDetails(int id) => '/orders/$id/';
 }
 
 class ApiErrors {

@@ -5,8 +5,10 @@ import 'package:real_ecommerce/features/auth/view/forgot_password_screen.dart';
 import 'package:real_ecommerce/features/auth/view/login.dart';
 import 'package:real_ecommerce/features/auth/view/otp_screen.dart';
 import 'package:real_ecommerce/features/auth/view/register_screen.dart';
-import 'package:real_ecommerce/features/checkout/view/add_address_screen.dart';
+import 'package:real_ecommerce/features/checkout/view/cart_total_screen.dart';
+import 'package:real_ecommerce/features/checkout/view/enhanced_checkout_screen.dart';
 import 'package:real_ecommerce/features/checkout/view/checkout_screen.dart';
+import 'package:real_ecommerce/features/checkout/view/add_address_screen.dart';
 import 'package:real_ecommerce/features/home/view/product_detail_screen.dart';
 import 'package:real_ecommerce/features/layout/layout_screen.dart';
 import 'package:real_ecommerce/features/offers/view/offers_screen.dart';
@@ -15,7 +17,6 @@ import 'package:real_ecommerce/features/orders/view/orders_screen.dart';
 import 'package:real_ecommerce/features/cart/view/cart_screens.dart';
 import 'package:real_ecommerce/features/payment/view/payment_screen.dart';
 import 'package:real_ecommerce/features/splash/splash_screen.dart';
-import 'package:real_ecommerce/main.dart';
 
 // ─── Route Names ───────────────────────────────
 abstract class AppRoutes {
@@ -29,7 +30,9 @@ abstract class AppRoutes {
   static const categories = '/categories';
   static const orders = '/orders';
   static const offers = '/offers';
+  static const cartTotal = '/cart-total';
   static const checkout = '/checkout';
+  static const enhancedCheckout = '/enhanced-checkout';
   static const addAddress = '/add-address';
   static const payment = '/payment';
   static const paymentSuccess = '/payment-success';
@@ -51,7 +54,7 @@ final appRouter = GoRouter(
     final isLoggedIn = token != null && token.isNotEmpty;
 
     // If user is not logged in and trying to access protected routes
-    final protectedRoutes = [AppRoutes.home, AppRoutes.cart, AppRoutes.profile];
+    final protectedRoutes = [AppRoutes.home, AppRoutes.cart, AppRoutes.profile, AppRoutes.cartTotal, AppRoutes.enhancedCheckout];
     final isProtectedRoute = protectedRoutes.any((route) => state.matchedLocation == route || state.matchedLocation.startsWith(route));
 
     if (!isLoggedIn && isProtectedRoute && state.matchedLocation != AppRoutes.splash) {
@@ -102,8 +105,18 @@ final appRouter = GoRouter(
     GoRoute(path: AppRoutes.offers, builder: (_, __) => const OffersScreen()),
 
     GoRoute(
+      path: AppRoutes.cartTotal,
+      builder: (_, __) => const CartTotalScreen(),
+    ),
+
+    GoRoute(
       path: AppRoutes.checkout,
       builder: (_, __) => const CheckoutScreen(),
+    ),
+
+    GoRoute(
+      path: AppRoutes.enhancedCheckout,
+      builder: (_, __) => const EnhancedCheckoutScreen(),
     ),
 
     GoRoute(

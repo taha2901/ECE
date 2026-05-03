@@ -8,8 +8,10 @@ import 'package:real_ecommerce/core/themes/app_theme.dart';
 import 'package:real_ecommerce/features/address/logic/address_cubit.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart' as cart;
+import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
 import 'package:real_ecommerce/features/home/logic/product_cubit.dart';
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
+import 'package:real_ecommerce/features/orders/logic/cubit.dart' as orders;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +36,12 @@ class LuxeStoreApp extends StatelessWidget {
           create: (_) => sl<WishlistCubit>()..loadWishlist(),
         ),
         BlocProvider<AddressCubit>(create: (_) => AddressCubit()),
-
+        BlocProvider<CheckoutCubit>(
+          create: (_) => sl<CheckoutCubit>(),
+        ),
+        BlocProvider<orders.OrdersCubit>(
+          create: (_) => sl<orders.OrdersCubit>(),
+        ),
       ],
       child: MaterialApp.router(
         title: AppStrings.appName,

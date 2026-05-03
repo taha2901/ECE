@@ -12,10 +12,29 @@ class HomeRepository {
   Future<ApiResult<ProductResponseModel>> getProducts({int page = 1}) async {
     try {
       final response = await _apiService.getProducts(page: page);
-      final data = Map<String, dynamic>.from(response.data as Map);
+      print('📦 Raw API Response: ${response.data.runtimeType}');
+      print('📦 API Response keys: ${response.data is Map ? (response.data as Map).keys : 'not a map'}');
+      
+      // Handle different response formats
+      Map<String, dynamic> data;
+      if (response.data is Map) {
+        data = Map<String, dynamic>.from(response.data as Map);
+      } else if (response.data is List) {
+        // If API returns just a list, wrap it
+        data = {
+          'count': (response.data as List).length,
+          'results': response.data,
+        };
+      } else {
+        throw Exception('Unexpected response format: ${response.data.runtimeType}');
+      }
+      
       final productResponse = ProductResponseModel.fromJson(data);
+      print('✅ Parsed products: ${productResponse.results.length}');
       return ApiResult.success(productResponse);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      print('❌ Error parsing products: $error');
+      print('Stack trace: $stackTrace');
       return ApiResult.failure(ErrorHandler.handle(error));
     }
   }

@@ -227,7 +227,7 @@ class _CartSummary extends StatelessWidget {
 
           // Checkout Button
           AppButton(
-            onTap: () => context.push(AppRoutes.checkout),
+            onTap: () => context.push(AppRoutes.cartTotal),
             label: 'Proceed to Checkout',
             isFullWidth: true,
           ),
