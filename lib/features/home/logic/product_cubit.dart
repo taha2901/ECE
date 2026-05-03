@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:real_ecommerce/core/network/api_result.dart';
 import 'package:real_ecommerce/features/home/data/models/product_model.dart';
+import 'package:real_ecommerce/features/home/data/repo/home_repository.dart';
 
 // ══════════════════════════════════════════════════════════
 //  STATES
@@ -18,13 +20,14 @@ final class ProductLoading extends ProductState {
 }
 
 final class ProductLoaded extends ProductState {
-  /// الـ raw data — الفلترة بتحصل في الـ UI بناءً على selectedId من CategoryCubit
+  final List<ProductModel> products;
   final List<ProductModel> featured;
-  final List<ProductModel> newArrivals;
+  final List<ProductModel> trending;
 
   const ProductLoaded({
+    required this.products,
     required this.featured,
-    required this.newArrivals,
+    required this.trending,
   });
 }
 
@@ -38,20 +41,31 @@ final class ProductError extends ProductState {
 // ══════════════════════════════════════════════════════════
 
 class ProductCubit extends Cubit<ProductState> {
-  ProductCubit() : super(const ProductInitial());
+  final HomeRepository _repository;
+
+  ProductCubit(this._repository) : super(const ProductInitial());
 
   Future<void> loadProducts() async {
     emit(const ProductLoading());
-    try {
-      await Future.delayed(const Duration(milliseconds: 800));
-      // 🔌 استبدل بـ: await _repository.getProducts()
-      emit(ProductLoaded(
-        featured: ProductMockData.featured,
-        newArrivals: ProductMockData.newArrivals,
-      ));
-    } catch (e) {
-      emit(const ProductError('Failed to load products.'));
-    }
+    final result = await _repository.getProducts();
+
+    result.when(
+      success: (data) {
+        final products = data.results;
+        // عرض جميع المنتجات، أو أول النصف كـ featured والباقي كـ trending
+        final midpoint = (products.length / 2).ceil();
+        final featured = products.take(midpoint).toList();
+        final trending = products.skip(midpoint).toList();
+        emit(ProductLoaded(
+          products: products,
+          featured: featured,
+          trending: trending,
+        ));
+      },
+      failure: (error) {
+        emit(ProductError(error.toString()));
+      },
+    );
   }
 
   Future<void> retry() => loadProducts();

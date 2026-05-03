@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
+import 'package:real_ecommerce/core/di/service_locator.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/widgets/common_widgets.dart';
 import 'package:real_ecommerce/features/home/logic/bannars_cubit.dart';
 import 'package:real_ecommerce/features/home/logic/category_cubit.dart';
 import 'package:real_ecommerce/features/home/logic/product_cubit.dart';
 import 'package:real_ecommerce/features/home/view/widgets/category_pill.dart';
-import 'package:real_ecommerce/features/home/view/widgets/delivery_info_strip.dart';
 import 'package:real_ecommerce/features/home/view/widgets/featured_and_new_arrival_products.dart';
 import 'package:real_ecommerce/features/home/view/widgets/home_appbar_content.dart';
 import 'package:real_ecommerce/features/home/view/widgets/home_banner_carousal.dart';
@@ -21,8 +21,8 @@ class HomeScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => BannerCubit()..loadBanners()),
-        BlocProvider(create: (_) => CategoryCubit()..loadCategories()),
-        BlocProvider(create: (_) => ProductCubit()..loadProducts()),
+        BlocProvider(create: (_) => sl<CategoryCubit>()..loadCategories()),
+        BlocProvider(create: (_) => sl<ProductCubit>()),
       ],
       child: const _HomeView(),
     );
@@ -50,6 +50,9 @@ class _HomeViewState extends State<_HomeView>
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductCubit>().loadProducts();
+    });
   }
 
   @override
@@ -126,6 +129,8 @@ class _HomeViewState extends State<_HomeView>
                   const SizedBox(height: AppSpacing.lg),
                   const NewArrivalsGrid(),
                   const SizedBox(height: AppSpacing.xxxl),
+                  // Bottom padding to prevent bottom nav bar from covering content
+                  const SizedBox(height: 100),
                 ],
               ),
             ),

@@ -92,7 +92,7 @@ class NewArrivalsGrid extends StatelessWidget {
             }
 
             final products = _filterProducts(
-              productState.newArrivals,
+              productState.trending,
               selectedId,
             );
 
@@ -132,7 +132,7 @@ List<ProductModel> _filterProducts(
   String selectedId,
 ) {
   if (selectedId == 'all') return products;
-  return products.where((p) => p.categoryId == selectedId).toList();
+  return products.where((p) => p.category.toString() == selectedId).toList();
 }
 
 class _EmptyProducts extends StatelessWidget {

@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/cart/logic/cubit.dart';
+import 'package:real_ecommerce/features/home/data/models/product_model.dart';
 import 'package:real_ecommerce/features/home/view/widgets/brand_and_rating.dart';
-import 'package:real_ecommerce/features/home/view/widgets/color_sector.dart';
 import 'package:real_ecommerce/features/home/view/widgets/delivery_info_strip.dart';
-import 'package:real_ecommerce/features/home/view/widgets/price_row.dart';
 import 'package:real_ecommerce/features/home/view/widgets/size_selector.dart';
-
-const List<String> _galleryImages = [
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1556906781-9a412961d28e?w=600&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600&h=600&fit=crop',
-];
 
 
 class ProductDetailScreen extends StatefulWidget {
-  const ProductDetailScreen({super.key});
+  final ProductModel product;
+  
+  const ProductDetailScreen({super.key, required this.product});
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -32,15 +28,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   late TabController _tabController;
   late PageController _pageController;
 
+  late List<String> _galleryImages;
+
   final _sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  final _colors = [
-    '#0A0F1E', '#00C6A7', '#EF4444', '#F59E0B',
-  ];
 
   @override
   void initState() {
     super.initState();
-
+    // بناء قائمة الصور من المنتج والـ variants
+    _galleryImages = [
+      widget.product.image,
+      ...widget.product.variants.map((v) => v.image).toList(),
+    ];
     _tabController = TabController(length: 3, vsync: this);
     _pageController = PageController();
   }
@@ -51,10 +50,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     _pageController.dispose();
     super.dispose();
   }
-
-  Color _hexToColor(String hex) =>
-      Color(int.parse(hex.replaceFirst('#', '0xFF')));
-
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +85,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: GestureDetector(
+                  onTap: () => setState(() => _isWishlisted = !_isWishlisted),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -164,7 +160,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                    BrandAndRating(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Nike Air Max 2025\nRunning Shoes',
+                      widget.product.name,
                       style: AppTypography.h1.copyWith(
                         height: 1.2,
                         fontWeight: FontWeight.w800,
@@ -172,7 +168,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    PriceRow(),
+                    Text(
+                      widget.product.formattedPrice,
+                      style: AppTypography.displayMedium.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xxl),
                     DeliveryInfoStrip(),
                     const SizedBox(height: AppSpacing.xxl),
@@ -180,16 +181,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                     const _SectionDivider(),
                     const SizedBox(height: AppSpacing.xl),
                         
-                    // Color selection
-                    _SectionHeader(title: 'Color'),
-                    const SizedBox(height: AppSpacing.lg),
-                    ColorSelector(
-                      colors: _colors,
-                      selected: _selectedColor,
-                      hexToColor: _hexToColor,
-                      onSelect: (c) => setState(() => _selectedColor = c),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    // Color selection - فقط إذا كانت هناك variants
+                    if (widget.product.variants.isNotEmpty) ...[
+                      _SectionHeader(title: 'Color'),
+                      const SizedBox(height: AppSpacing.lg),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: widget.product.variants.map((variant) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: AppSpacing.md),
+                              child: GestureDetector(
+                                onTap: () => setState(() => _selectedColor = variant.colorHex),
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(variant.colorHex.replaceFirst('#', '0xFF'))),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _selectedColor == variant.colorHex
+                                          ? AppColors.accent
+                                          : Colors.grey,
+                                      width: _selectedColor == variant.colorHex ? 3 : 1,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      variant.color,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Color(int.parse(variant.colorHex.replaceFirst('#', '0xFF'))) == Colors.black ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
                         
                     // Size selection
                     Row(
@@ -226,9 +259,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       child: TabBarView(
                         controller: _tabController,
                         children: [
-                          _DescriptionTab(),
+                          _DescriptionTab(description: widget.product.description),
                           _SpecsTab(),
-                          _ReviewsTab(),
+                          _ReviewsTab(rating: widget.product.rating, reviewsCount: widget.product.reviews),
                         ],
                       ),
                     ),
@@ -394,18 +427,18 @@ class StyledTabBar extends StatelessWidget {
 // TAB CONTENT
 // ═══════════════════════════════════════════════
 class _DescriptionTab extends StatelessWidget {
+  final String description;
+  
+  const _DescriptionTab({required this.description});
+  
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       child: Text(
-        'Premium running shoes designed for performance and comfort. '
-        'Built with advanced Air Max cushioning technology for maximum '
-        'support during your workouts. The breathable mesh upper keeps '
-        'your feet cool, while the durable rubber outsole provides '
-        'excellent traction on any surface.\n\n'
-        'Engineered for athletes and everyday runners alike, these shoes '
-        'combine style with superior functionality.',
+        description.isEmpty 
+          ? 'No description available' 
+          : description,
         style: AppTypography.bodyMedium.copyWith(height: 1.7, fontSize: 14),
       ),
     );
@@ -433,27 +466,38 @@ class _SpecsTab extends StatelessWidget {
 }
 
 class _ReviewsTab extends StatelessWidget {
+  final double rating;
+  final int reviewsCount;
+  
+  const _ReviewsTab({required this.rating, required this.reviewsCount});
+  
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const NeverScrollableScrollPhysics(),
-      children: const [
-        ReviewItem(
-          name: 'Ahmed M.',
-          rating: 5,
-          comment: 'Amazing quality! Exactly as described. Super comfy.',
-          date: '2 days ago',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
+    return Column(
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 20),
+            const SizedBox(width: 8),
+            Text(
+              '$rating',
+              style: AppTypography.labelLarge,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '($reviewsCount reviews)',
+              style: AppTypography.bodySmall,
+            ),
+          ],
         ),
-        ReviewItem(
-          name: 'Sara K.',
-          rating: 4,
-          comment: 'Great product, fast delivery. Will buy again!',
-          date: '1 week ago',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
-        ),
+        const SizedBox(height: 16),
+        if (reviewsCount == 0)
+          Center(
+            child: Text(
+              'No reviews yet',
+              style: AppTypography.bodyMedium,
+            ),
+          ),
       ],
     );
   }
@@ -663,6 +707,20 @@ class _ProductBottomBarState extends State<_ProductBottomBar> {
           // Add to Cart button
           Expanded(
             child: GestureDetector(
+              onTap: () {
+                final productDetailState = context.findAncestorStateOfType<_ProductDetailScreenState>();
+                if (productDetailState != null) {
+                  context.read<CartCubit>().addToCart(
+                    productId: productDetailState.widget.product.id,
+                    quantity: _qty,
+                    size: productDetailState._selectedSize,
+                    color: productDetailState._selectedColor,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Added to cart!')),
+                  );
+                }
+              },
               child: Container(
                 height: 54,
                 decoration: BoxDecoration(

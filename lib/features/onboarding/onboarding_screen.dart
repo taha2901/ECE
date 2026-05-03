@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
@@ -41,6 +42,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       gradient: AppColors.accentGradient,
     ),
   ];
+
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_completed', true);
+    if (mounted) context.go(AppRoutes.login);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +94,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       gradient: const LinearGradient(
                         colors: [AppColors.white, AppColors.white],
                       ),
-                      onTap: () => context.go(AppRoutes.login),
+                      onTap: _completeOnboarding,
                     )
                   else
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: () => context.go(AppRoutes.login),
+                          onPressed: _completeOnboarding,
                           child: Text(
                             'Skip',
                             style: AppTypography.labelLarge.copyWith(

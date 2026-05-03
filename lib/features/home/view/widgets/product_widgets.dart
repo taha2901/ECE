@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/cart/logic/cubit.dart';
 import 'package:real_ecommerce/features/home/data/models/product_model.dart';
-
-
-
+import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
+import 'package:real_ecommerce/features/wishlist/logic/states.dart';
 
 class ProductCardVertical extends StatelessWidget {
   final ProductModel product;
@@ -14,9 +15,8 @@ class ProductCardVertical extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.productDetail),
+      onTap: () => context.push(AppRoutes.productDetail, extra: product),
       child: Container(
         width: 145,
         decoration: BoxDecoration(
@@ -36,29 +36,31 @@ class ProductCardVertical extends StatelessWidget {
                     topRight: Radius.circular(20),
                   ),
                   child: _ProductImage(
-                    url: product.imageUrl,
+                    url: product.image,
                     height: 148,
-                    cacheWidth: 300,
+                    width: double.infinity,
+                    cacheWidth: 145,
                   ),
                 ),
-
-                // Discount badge
-                if (product.discount.isNotEmpty)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: _DiscountBadge(label: product.discount),
-                  ),
 
                 // Wishlist button
                 Positioned(
                   top: 8,
                   right: 8,
-                  child: _WishlistBtn(
-                    wishlisted: false,
-                    size: 34,
-                    iconSize: 16,
-                    onTap: () {},
+                  child: BlocBuilder<WishlistCubit, WishlistState>(
+                    builder: (context, state) {
+                      final wishlisted = context
+                          .read<WishlistCubit>()
+                          .isWishlisted(product.id);
+                      return _WishlistBtn(
+                        wishlisted: wishlisted,
+                        size: 34,
+                        iconSize: 16,
+                        onTap: () => context
+                            .read<WishlistCubit>()
+                            .toggleWishlist(product.id),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -78,20 +80,26 @@ class ProductCardVertical extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
 
-                  // Brand + rating row
+                  // Category + rating row
                   Row(
                     children: [
-                      Text(
-                        product.brand,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textHint,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Text(
+                          product.categoryName,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textHint,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.star_rounded,
-                          size: 12, color: Color(0xFFF59E0B)),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 12,
+                        color: Color(0xFFF59E0B),
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         product.formattedRating,
@@ -105,21 +113,7 @@ class ProductCardVertical extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Price row
-                  Row(
-                    children: [
-                      Text(
-                        product.formattedPrice,
-                        style: AppTypography.priceSmall,
-                      ),
-                      const SizedBox(width: 6),
-                      if (product.originalPrice > product.price)
-                        Text(
-                          product.formattedOriginalPrice,
-                          style: AppTypography.priceStrikethrough
-                              .copyWith(fontSize: 11),
-                        ),
-                    ],
-                  ),
+                  Text(product.formattedPrice, style: AppTypography.priceSmall),
                 ],
               ),
             ),
@@ -130,17 +124,14 @@ class ProductCardVertical extends StatelessWidget {
   }
 }
 
-
 class ProductCardGrid extends StatelessWidget {
   final ProductModel product;
   const ProductCardGrid({super.key, required this.product});
 
- 
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.productDetail),
+      onTap: () => context.push(AppRoutes.productDetail, extra: product),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -162,39 +153,28 @@ class ProductCardGrid extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       height: double.infinity,
-                      child: _ProductImage(
-                        url: product.imageUrl,
-                        cacheWidth: 300,
-                      ),
+                      child: _ProductImage(url: product.image, cacheWidth: 300),
                     ),
                   ),
-
-                  // "New" badge
-                  if (product.isNew)
-                    const Positioned(
-                      top: 9,
-                      left: 9,
-                      child: _NewBadge(),
-                    ),
-
-                  // Discount badge
-                  if (product.discount.isNotEmpty && !product.isNew)
-                    Positioned(
-                      top: 9,
-                      left: 9,
-                      child: _DiscountBadge(label: product.discount),
-                    ),
 
                   // Wishlist
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: _WishlistBtn(
-                      wishlisted: false,
-                      size: 30,
-                      iconSize: 14,
-                      onTap: () {},
-                          
+                    child: BlocBuilder<WishlistCubit, WishlistState>(
+                      builder: (context, state) {
+                        final wishlisted = context
+                            .read<WishlistCubit>()
+                            .isWishlisted(product.id);
+                        return _WishlistBtn(
+                          wishlisted: wishlisted,
+                          size: 30,
+                          iconSize: 14,
+                          onTap: () => context
+                              .read<WishlistCubit>()
+                              .toggleWishlist(product.id),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -217,8 +197,11 @@ class ProductCardGrid extends StatelessWidget {
 
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          size: 11, color: Color(0xFFF59E0B)),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 11,
+                        color: Color(0xFFF59E0B),
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         product.formattedRating,
@@ -240,19 +223,34 @@ class ProductCardGrid extends StatelessWidget {
                         children: [
                           Text(
                             product.formattedPrice,
-                            style: AppTypography.priceSmall
-                                .copyWith(fontSize: 14),
+                            style: AppTypography.priceSmall.copyWith(
+                              fontSize: 14,
+                            ),
                           ),
-                          if (product.originalPrice > product.price)
+                          if (!product.inStock)
                             Text(
-                              product.formattedOriginalPrice,
-                              style: AppTypography.priceStrikethrough
-                                  .copyWith(fontSize: 10),
+                              'Out of stock',
+                              style: AppTypography.bodySmall.copyWith(
+                                fontSize: 10,
+                                color: AppColors.error,
+                              ),
                             ),
                         ],
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          context.read<CartCubit>().addToCart(
+                            productId: product.id,
+                            quantity: 1,
+                            size: 'M', // Default size
+                            color: product.variants.isNotEmpty
+                                ? product.variants.first.colorHex
+                                : '#000000',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Added to cart!')),
+                          );
+                        },
                         child: Container(
                           width: 30,
                           height: 30,
@@ -260,8 +258,11 @@ class ProductCardGrid extends StatelessWidget {
                             gradient: AppColors.accentGradient,
                             borderRadius: BorderRadius.circular(9),
                           ),
-                          child: const Icon(Icons.add_rounded,
-                              color: AppColors.white, size: 17),
+                          child: const Icon(
+                            Icons.add_rounded,
+                            color: AppColors.white,
+                            size: 17,
+                          ),
                         ),
                       ),
                     ],
@@ -284,88 +285,50 @@ class ProductCardGrid extends StatelessWidget {
 class _ProductImage extends StatelessWidget {
   final String url;
   final double? height;
+  final double? width;
   final int cacheWidth;
 
   const _ProductImage({
     required this.url,
     this.height,
+    this.width,
     required this.cacheWidth,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
+    return SizedBox(
       height: height,
-      cacheWidth: cacheWidth,
-      loadingBuilder: (ctx, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: AppColors.surfaceVariant,
-          child: const Center(
-            child: SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accent,
+      width: width,
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        width: width,
+        height: height,
+        cacheWidth: cacheWidth,
+        loadingBuilder: (ctx, child, progress) {
+          if (progress == null) return child;
+          return Container(
+            color: AppColors.surfaceVariant,
+            child: const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accent,
+                ),
               ),
             ),
+          );
+        },
+        errorBuilder: (_, __, ___) => Container(
+          color: AppColors.surfaceVariant,
+          child: const Icon(
+            Icons.image_outlined,
+            color: AppColors.textHint,
+            size: 36,
           ),
-        );
-      },
-      errorBuilder: (_, __, ___) => Container(
-        color: AppColors.surfaceVariant,
-        child: const Icon(Icons.image_outlined,
-            color: AppColors.textHint, size: 36),
-      ),
-    );
-  }
-}
-
-class _DiscountBadge extends StatelessWidget {
-  final String label;
-  const _DiscountBadge({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _NewBadge extends StatelessWidget {
-  const _NewBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFF22C55E).withOpacity(0.15),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: const Text(
-        'New',
-        style: TextStyle(
-          color: Color(0xFF16A34A),
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -404,9 +367,7 @@ class _WishlistBtn extends StatelessWidget {
           ],
         ),
         child: Icon(
-          wishlisted
-              ? Icons.favorite_rounded
-              : Icons.favorite_outline_rounded,
+          wishlisted ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
           size: iconSize,
           color: wishlisted ? AppColors.accent : AppColors.textHint,
         ),

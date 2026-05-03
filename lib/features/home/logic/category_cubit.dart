@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:real_ecommerce/core/network/api_result.dart';
 import 'package:real_ecommerce/features/home/data/models/category_model.dart';
+import 'package:real_ecommerce/features/home/data/repo/home_repository.dart';
 
 // ══════════════════════════════════════════════════════════
 //  STATES
@@ -48,17 +50,25 @@ final class CategoryError extends CategoryState {
 // ══════════════════════════════════════════════════════════
 
 class CategoryCubit extends Cubit<CategoryState> {
-  CategoryCubit() : super(const CategoryInitial());
+  final HomeRepository _repository;
+
+  CategoryCubit(this._repository) : super(const CategoryInitial());
 
   Future<void> loadCategories() async {
     emit(const CategoryLoading());
-    try {
-      await Future.delayed(const Duration(milliseconds: 400));
-      // 🔌 استبدل بـ: await _repository.getCategories()
-      emit(CategoryLoaded(categories: CategoryMockData.categories));
-    } catch (e) {
-      emit(const CategoryError('Failed to load categories.'));
-    }
+
+    final result = await _repository.getCategories();
+    result.when(
+      success: (categories) {
+        emit(CategoryLoaded(
+          categories: categories,
+          selectedId: categories.isNotEmpty ? categories.first.id : 'all',
+        ));
+      },
+      failure: (error) {
+        emit(CategoryError(error.apiErrorModel.readableMessage));
+      },
+    );
   }
 
   /// بيغير الـ selectedId بس — مش بيأثر على البانرز أو المنتجات

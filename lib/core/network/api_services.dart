@@ -1,37 +1,40 @@
 import 'package:dio/dio.dart';
+import 'api_constants.dart';
 
 class ApiService {
   final Dio _dio;
 
   ApiService(this._dio);
 
-  // =================== Auth ===================
+  Future<Response> login(Map<String, dynamic> body) async {
+    return await _dio.post(
+      ApiConstants.login,
+      data: body,
+    );
+  }
+  Future<Response> logout() async {
+  return await _dio.post(ApiConstants.logout);
+}
 
-  // Future<LoginResponseBody> login(LoginRequestBody loginRequestBody) async {
-  //   final response = await _dio.post(
-  //     ApiConstants.login,
-  //     data: loginRequestBody.toJson(),
-  //   );
-  //   return LoginResponseBody.fromJson(response.data);
-  // }
+  Future<Response> register(Map<String, dynamic> body) async {
+    return await _dio.post(
+      ApiConstants.register,
+      data: body,
+    );
+  }
 
-  // Future<RegisterResponseBody> register(
-  //     RegisterRequestBody registerRequestBody) async {
-  //   final response = await _dio.post(
-  //     ApiConstants.register,
-  //     data: registerRequestBody.toJson(),
-  //   );
-  //   return RegisterResponseBody.fromJson(response.data);
-  // }
+  Future<Response> getProducts({int page = 1}) async {
+    return await _dio.get(
+      ApiConstants.getAllProducts,
+      queryParameters: {'page': page},
+    );
+  }
 
-  // Future<Map<String, dynamic>> logout({String? refreshToken}) async {
-  //   final response = await _dio.post(
-  //     ApiConstants.logout,
-  //     data: refreshToken != null && refreshToken.isNotEmpty
-  //         ? {"refresh": refreshToken}
-  //         : null,
-  //   );
-  //   return response.data;
-  // }
+  Future<Response> getCategories() async {
+    return await _dio.get(ApiConstants.getAllCategories);
+  }
 
+  Future<Response> getCategoryById(int id) async {
+    return await _dio.get(ApiConstants.getCategoryDetails(id));
+  }
 }

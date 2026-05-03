@@ -1,264 +1,246 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/widgets/common_widgets.dart';
+import 'package:real_ecommerce/core/widgets/common_widgets.dart';
+import 'package:real_ecommerce/features/cart/logic/cubit.dart';
+import 'package:real_ecommerce/features/cart/logic/states.dart';
+import 'widgets/cart_item_widget.dart';
 
-// ═══════════════════════════════════════════════
-// CART SCREEN
-// ═══════════════════════════════════════════════
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      context.read<CartCubit>().loadCart();
+      _loaded = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Cart'),
-        actions: [
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              'Clear All',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.accent,
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text('Shopping Cart'),
+        centerTitle: true,
+      ),
+      body: BlocListener<CartCubit, CartState>(
+        listener: (context, state) {
+          // عرض رسالة الخطأ في snackbar عند حدوث خطأ في التحديث
+          if (state.errorMessage != null && state.status == CartStatus.loaded) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 2),
               ),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              itemCount: 3,
-              itemBuilder: (_, i) => const CartItemCard(),
-            ),
-          ),
-          const CartSummarySection(),
-        ],
-      ),
-    );
-  }
-}
-
-class CartItemCard extends StatefulWidget {
-  const CartItemCard({super.key});
-
-  @override
-  State<CartItemCard> createState() => _CartItemCardState();
-}
-
-class _CartItemCardState extends State<CartItemCard> {
-  int _qty = 1;
-
-  @override
-  Widget build(BuildContext context) {
-    return Dismissible(
-      key: UniqueKey(),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: AppSpacing.xl),
-        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
-        child: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          boxShadow: AppColors.cardShadow,
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: AppColors.surfaceVariant,
-                child: const Icon(
-                  Icons.image_outlined,
-                  color: AppColors.textHint,
+            );
+          }
+        },
+        child: BlocBuilder<CartCubit, CartState>(
+          builder: (context, state) {
+            if (state.status == CartStatus.loading) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.accent,
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
+              );
+            }
+
+            if (state.status == CartStatus.error) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: AppColors.textHint,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      state.errorMessage ?? 'Error loading cart',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    AppButton(
+                      onTap: () => context.read<CartCubit>().retry(),
+                      label: 'Retry',
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (state.isEmpty) {
+              return Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 80,
+                    color: AppColors.textHint,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Nike Air Max 2025',
-                    style: AppTypography.labelLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    'Your cart is empty',
+                    style: AppTypography.h2,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      AppBadge(label: 'Blue', isSmall: true),
-                      const SizedBox(width: 6),
-                      AppBadge(label: 'Size L', isSmall: true),
-                    ],
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Add some items to get started',
+                    style: AppTypography.bodyMedium
+                        .copyWith(color: AppColors.textHint),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('\$149.99', style: AppTypography.priceMedium),
-                      QuantityControl(
-                        quantity: _qty,
-                        onIncrement: () => setState(() => _qty++),
-                        onDecrement: () {
-                          if (_qty > 1) setState(() => _qty--);
-                        },
-                        isSmall: true,
-                      ),
-                    ],
+                  const SizedBox(height: AppSpacing.xl),
+                  AppButton(
+                    onTap: () => context.go(AppRoutes.home),
+                    label: 'Continue Shopping',
                   ),
                 ],
               ),
-            ),
-          ],
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                  itemCount: state.items.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.lg),
+                  itemBuilder: (_, index) => CartItemWidget(
+                    item: state.items[index],
+                  ),
+                ),
+              ),
+              _CartSummary(state: state),
+              const SizedBox(height: 100),
+            ],
+          );
+          },
         ),
       ),
     );
   }
 }
 
-class CartSummarySection extends StatefulWidget {
-  const CartSummarySection({super.key});
+class _CartSummary extends StatelessWidget {
+  final CartState state;
 
-  @override
-  State<CartSummarySection> createState() => _CartSummarySectionState();
-}
-
-class _CartSummarySectionState extends State<CartSummarySection> {
-  final _couponCtrl = TextEditingController();
+  const _CartSummary({required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final subtotal = state.totalPrice;
+    final shipping = 10.0;
+    final tax = subtotal * 0.1;
+    final total = subtotal + shipping + tax;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.xxl),
-          topRight: Radius.circular(AppRadius.xxl),
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        boxShadow: AppColors.cardShadow,
       ),
+      padding: const EdgeInsets.all(AppSpacing.pagePadding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Subtotal
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _couponCtrl,
-                  decoration: InputDecoration(
-                    hintText: 'Enter coupon code',
-                    hintStyle: AppTypography.bodyMedium,
-                    prefixIcon: const Icon(
-                      Icons.local_offer_outlined,
-                      size: 18,
-                    ),
-                  ),
-                ),
+              Text('Subtotal', style: AppTypography.bodyMedium),
+              Text(
+                '\$${subtotal.toStringAsFixed(2)}',
+                style: AppTypography.bodyMedium,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Container(
-                height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                decoration: BoxDecoration(
-                  gradient: AppColors.accentGradient,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                ),
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Apply',
-                    style: AppTypography.buttonMedium.copyWith(
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Shipping
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Shipping', style: AppTypography.bodyMedium),
+              Text(
+                '\$${shipping.toStringAsFixed(2)}',
+                style: AppTypography.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Tax
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Tax', style: AppTypography.bodyMedium),
+              Text(
+                '\$${tax.toStringAsFixed(2)}',
+                style: AppTypography.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          const Divider(),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Total
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total', style: AppTypography.h3),
+              Text(
+                '\$${total.toStringAsFixed(2)}',
+                style: AppTypography.h3.copyWith(color: AppColors.accent),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          const _PriceRow(label: 'Subtotal', value: '\$449.97'),
-          const _PriceRow(label: 'Shipping', value: '\$9.99'),
-          const _PriceRow(
-            label: 'Discount',
-            value: '-\$50.00',
-            isDiscount: true,
-          ),
-          const Divider(height: AppSpacing.xl),
-          _PriceRow(label: 'Total', value: '\$409.96', isTotal: true),
-          const SizedBox(height: AppSpacing.xl),
-          GradientButton(
+
+          // Checkout Button
+          AppButton(
+            onTap: () => context.push(AppRoutes.checkout),
             label: 'Proceed to Checkout',
-            onTap: () {
-              context.go(AppRoutes.checkout);
-            },
+            isFullWidth: true,
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 85),
-        ],
-      ),
-    );
-  }
-}
+          const SizedBox(height: AppSpacing.md),
 
-class _PriceRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isDiscount;
-  final bool isTotal;
-
-  const _PriceRow({
-    required this.label,
-    required this.value,
-    this.isDiscount = false,
-    this.isTotal = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: isTotal ? AppTypography.h3 : AppTypography.bodyMedium,
-          ),
-          Text(
-            value,
-            style: isTotal
-                ? AppTypography.priceLarge
-                : isDiscount
-                ? AppTypography.labelLarge.copyWith(color: AppColors.success)
-                : AppTypography.labelLarge,
+          // Continue Shopping
+          TextButton(
+            onPressed: () => context.go(AppRoutes.home),
+            child: Text(
+              'Continue Shopping',
+              style: AppTypography.labelLarge
+                  .copyWith(color: AppColors.accent),
+            ),
           ),
         ],
       ),

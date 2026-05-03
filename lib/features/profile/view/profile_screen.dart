@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/address/view/my_addresses_page.dart';
+import 'package:real_ecommerce/features/auth/logic/cubit.dart';
+import 'package:real_ecommerce/features/auth/logic/states.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/common_widgets.dart';
 
@@ -44,7 +48,11 @@ class ProfileScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: AppColors.cardShadow,
                         ),
-                        child: const Icon(Icons.person_rounded, size: 44, color: AppColors.white),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 44,
+                          color: AppColors.white,
+                        ),
                       ),
                       Positioned(
                         bottom: 0,
@@ -56,7 +64,11 @@ class ProfileScreen extends StatelessWidget {
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.camera_alt_rounded, size: 14, color: AppColors.white),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            size: 14,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -101,7 +113,13 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.location_on_outlined,
                     label: 'My Addresses',
                     iconColor: const Color(0xFF10B981),
-                    onTap: () => context.push(AppRoutes.myAddresses),
+                    // ✅ غير الـ onTap ده
+                    onTap: () =>
+                        Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                            builder: (_) => const MyAddressesPage(),
+                          ),
+                        ),
                   ),
                   _ProfileMenuItem(
                     icon: Icons.credit_card_rounded,
@@ -167,14 +185,29 @@ class ProfileScreen extends StatelessWidget {
             // ── Sign Out ────────────────────────
             Padding(
               padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              child: AppButton(
-                label: 'Sign Out',
-                isOutlined: true,
-                onTap: () => context.go(AppRoutes.login),
-                backgroundColor: AppColors.error.withOpacity(0.05),
+              child: BlocConsumer<AuthCubit, AuthState>(
+                listener: (context, state) {
+                  if (state.status == AuthStatus.initial) {
+                    context.go(AppRoutes.login);
+                  }
+                  if (state.status == AuthStatus.loggedOut) {
+                    context.go(AppRoutes.login);
+                  }
+                },
+                builder: (context, state) {
+                  final isLoading = state.status == AuthStatus.loading;
+                  return AppButton(
+                    label: isLoading ? 'Signing out...' : 'Sign Out',
+                    isOutlined: true,
+                    onTap: isLoading
+                        ? () {}
+                        : () => context.read<AuthCubit>().logout(),
+                    backgroundColor: AppColors.error.withOpacity(0.05),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: AppSpacing.xxxl),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -242,9 +275,7 @@ class _ProfileMenuItem extends StatelessWidget {
               child: Icon(icon, size: 20, color: color),
             ),
             const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Text(label, style: AppTypography.labelLarge),
-            ),
+            Expanded(child: Text(label, style: AppTypography.labelLarge)),
             if (badge != null)
               Container(
                 width: 20,
@@ -264,7 +295,11 @@ class _ProfileMenuItem extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: AppSpacing.sm),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textHint, size: 20),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textHint,
+              size: 20,
+            ),
           ],
         ),
       ),

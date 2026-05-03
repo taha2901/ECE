@@ -66,7 +66,6 @@ class LayoutCubit extends Cubit<LayoutState> {
   List<CustomNavBarScreen> getScreens(BuildContext context) {
     return [
       const CustomNavBarScreen(screen: HomeScreen()),
-      // const CustomNavBarScreen(screen: CategoriesScreen()),
       const CustomNavBarScreen(screen: CartScreen()),
       const CustomNavBarScreen(screen: WishlistScreen()),
       const CustomNavBarScreen(screen: ProfileScreen()),

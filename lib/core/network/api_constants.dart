@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String apiBaseUrl = 'https://pos.tests.midoghanam.site';
+  static const String apiBaseUrl = 'https://midoghanam.pythonanywhere.com/api';
 
   // Auth
   static const String login = '/auth/login/';
@@ -23,14 +23,19 @@ class ApiConstants {
   static String deleteSupplier(String id) =>
       '/partners/suppliers/delete/$id/'; // ✅ لو موجود عندكم
 
+  // Wishlist
+  static const String wishlist = '/wishlist/';
+  static const String addToWishlist = '/wishlist/add/';
+  static String removeFromWishlist(int productId) =>
+      '/wishlist/remove/$productId/';
+
   // Categories
-  static const String getAllCategories = '/products/categories/get/all/';
-  static const String addCategory = '/products/categories/add/';
-  static const String deleteCategory = '/products/categories/delete/';
+  static const String getAllCategories = '/categories/';
+  static String getCategoryDetails(int id) => '/categories/$id/';
 
   // Products
+  static const String getAllProducts = '/products/';
   static const String addProduct = '/products/add/';
-  static const String getAllProducts = '/products/get/all/';
   static const String getProductDetails = '/products/get/';
   static const String editProduct = '/products/edit/';
   static const String deleteProduct =
