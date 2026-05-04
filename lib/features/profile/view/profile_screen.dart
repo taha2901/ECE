@@ -16,201 +16,271 @@ import '../../../core/widgets/common_widgets.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Profile'),
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign In Required'),
+        content: const Text('You need to sign in to access this feature.'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {},
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go(AppRoutes.login);
+            },
+            child: const Text('Sign In'),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ── Profile Header ──────────────────
-            Container(
-              color: AppColors.white,
-              padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              child: Column(
-                children: [
-                  Stack(
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state.status == AuthStatus.loggedOut) {
+          context.go(AppRoutes.login);
+        }
+      },
+      builder: (context, authState) {
+        final user = authState.authData?.user;
+        final isLoggedIn = user != null;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('My Profile'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // ── Profile Header ──────────────────
+                Container(
+                  color: AppColors.white,
+                  padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                  child: Column(
                     children: [
-                      Container(
-                        width: 88,
-                        height: 88,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          shape: BoxShape.circle,
-                          boxShadow: AppColors.cardShadow,
-                        ),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          size: 44,
-                          color: AppColors.white,
-                        ),
+                      Stack(
+                        children: [
+                          Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: AppColors.cardShadow,
+                            ),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              size: 44,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                color: AppColors.accent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                size: 14,
+                                color: AppColors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            color: AppColors.accent,
-                            shape: BoxShape.circle,
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        isLoggedIn
+                            ? '${user.firstName} ${user.lastName}'
+                            : 'Guest User',
+                        style: AppTypography.h2,
+                      ),
+                      Text(
+                        isLoggedIn
+                            ? user.email
+                            : 'Please sign in to view your profile',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          GestureDetector(
+                            onTap: () => isLoggedIn
+                                ? context.push(AppRoutes.orders)
+                                : _showLoginDialog(context),
+                            child: _StatItem(
+                              value: isLoggedIn ? '12' : '0',
+                              label: 'Orders',
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            size: 14,
-                            color: AppColors.white,
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.divider,
                           ),
-                        ),
+                          _StatItem(
+                            value: isLoggedIn ? '8' : '0',
+                            label: 'Wishlist',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.divider,
+                          ),
+                          GestureDetector(
+                            onTap: () => isLoggedIn
+                                ? context.push(AppRoutes.myAddresses)
+                                : _showLoginDialog(context),
+                            child: _StatItem(
+                              value: isLoggedIn ? '2' : '0',
+                              label: 'Addresses',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── Main Menu ───────────────────────
+                Container(
+                  color: AppColors.white,
+                  child: Column(
+                    children: [
+                      _ProfileMenuItem(
+                        icon: Icons.shopping_bag_outlined,
+                        label: 'My Orders',
+                        iconColor: const Color(0xFF6366F1),
+                        onTap: () => isLoggedIn
+                            ? context.push(AppRoutes.orders)
+                            : _showLoginDialog(context),
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.location_on_outlined,
+                        label: 'My Addresses',
+                        iconColor: const Color(0xFF10B981),
+                        onTap: () => isLoggedIn
+                            ? Navigator.of(context, rootNavigator: true).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const MyAddressesPage(),
+                                ),
+                              )
+                            : _showLoginDialog(context),
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.credit_card_rounded,
+                        label: 'Payment Methods',
+                        iconColor: const Color(0xFF3B82F6),
+                        onTap: () => isLoggedIn
+                            ? context.push(AppRoutes.payment)
+                            : _showLoginDialog(context),
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.local_offer_outlined,
+                        label: 'Offers & Coupons',
+                        iconColor: const Color(0xFFE94560),
+                        onTap: () => isLoggedIn
+                            ? context.push(AppRoutes.offers)
+                            : _showLoginDialog(context),
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.notifications_outlined,
+                        label: 'Notifications',
+                        iconColor: const Color(0xFFF59E0B),
+                        onTap: () => isLoggedIn
+                            ? context.push(AppRoutes.notifications)
+                            : _showLoginDialog(context),
+                        badge: '3',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── Support Menu ────────────────────
+                Container(
+                  color: AppColors.white,
+                  child: Column(
+                    children: [
+                      _ProfileMenuItem(
+                        icon: Icons.help_outline_rounded,
+                        label: 'Help & Support',
+                        onTap: () {},
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.privacy_tip_outlined,
+                        label: 'Privacy Policy',
+                        onTap: () {},
+                      ),
+                      _ProfileMenuItem(
+                        icon: Icons.info_outline_rounded,
+                        label: 'About Us',
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── Admin Panel ─────────────────────
+                if (isLoggedIn && user.isAdmin)
+                  Container(
+                    color: AppColors.white,
+                    child: _ProfileMenuItem(
+                      icon: Icons.admin_panel_settings_outlined,
+                      label: 'Admin Dashboard',
+                      iconColor: const Color(0xFF4F46E5),
+                      onTap: () => context.push(AppRoutes.adminDashboard),
+                    ),
+                  ),
+                if (isLoggedIn && user.isAdmin)
                   const SizedBox(height: AppSpacing.lg),
-                  Text('Ahmed Mohamed', style: AppTypography.h2),
-                  Text('ahmed@example.com', style: AppTypography.bodyMedium),
-                  const SizedBox(height: AppSpacing.xl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.push(AppRoutes.orders),
-                        child: _StatItem(value: '12', label: 'Orders'),
-                      ),
-                      Container(width: 1, height: 40, color: AppColors.divider),
-                      _StatItem(value: '8', label: 'Wishlist'),
-                      Container(width: 1, height: 40, color: AppColors.divider),
-                      GestureDetector(
-                        onTap: () => context.push(AppRoutes.myAddresses),
-                        child: _StatItem(value: '2', label: 'Addresses'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
 
-            // ── Main Menu ───────────────────────
-            Container(
-              color: AppColors.white,
-              child: Column(
-                children: [
-                  _ProfileMenuItem(
-                    icon: Icons.shopping_bag_outlined,
-                    label: 'My Orders',
-                    iconColor: const Color(0xFF6366F1),
-                    onTap: () => context.push(AppRoutes.orders),
+                // ── Sign Out ────────────────────────
+                if (isLoggedIn)
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                    child: AppButton(
+                      label: 'Sign Out',
+                      isOutlined: true,
+                      onTap: () => context.read<AuthCubit>().logout(),
+                      backgroundColor: AppColors.error.withOpacity(0.05),
+                    ),
                   ),
-                  _ProfileMenuItem(
-                    icon: Icons.location_on_outlined,
-                    label: 'My Addresses',
-                    iconColor: const Color(0xFF10B981),
-                    // ✅ غير الـ onTap ده
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
-                            builder: (_) => const MyAddressesPage(),
-                          ),
-                        ),
+                if (!isLoggedIn)
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                    child: AppButton(
+                      label: 'Sign In',
+                      onTap: () => context.go(AppRoutes.login),
+                    ),
                   ),
-                  _ProfileMenuItem(
-                    icon: Icons.credit_card_rounded,
-                    label: 'Payment Methods',
-                    iconColor: const Color(0xFF3B82F6),
-                    onTap: () => context.push(AppRoutes.payment),
-                  ),
-                  _ProfileMenuItem(
-                    icon: Icons.local_offer_outlined,
-                    label: 'Offers & Coupons',
-                    iconColor: const Color(0xFFE94560),
-                    onTap: () => context.push(AppRoutes.offers),
-                  ),
-                  _ProfileMenuItem(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notifications',
-                    iconColor: const Color(0xFFF59E0B),
-                    onTap: () => context.push(AppRoutes.notifications),
-                    badge: '3',
-                  ),
-                ],
-              ),
+                const SizedBox(height: 100),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ── Support Menu ────────────────────
-            Container(
-              color: AppColors.white,
-              child: Column(
-                children: [
-                  _ProfileMenuItem(
-                    icon: Icons.help_outline_rounded,
-                    label: 'Help & Support',
-                    onTap: () {},
-                  ),
-                  _ProfileMenuItem(
-                    icon: Icons.privacy_tip_outlined,
-                    label: 'Privacy Policy',
-                    onTap: () {},
-                  ),
-                  _ProfileMenuItem(
-                    icon: Icons.info_outline_rounded,
-                    label: 'About Us',
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ── Admin Panel ─────────────────────
-            Container(
-              color: AppColors.white,
-              child: _ProfileMenuItem(
-                icon: Icons.admin_panel_settings_outlined,
-                label: 'Admin Dashboard',
-                iconColor: const Color(0xFF4F46E5),
-                onTap: () => context.push(AppRoutes.adminDashboard),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ── Sign Out ────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              child: BlocConsumer<AuthCubit, AuthState>(
-                listener: (context, state) {
-                  if (state.status == AuthStatus.initial) {
-                    context.go(AppRoutes.login);
-                  }
-                  if (state.status == AuthStatus.loggedOut) {
-                    context.go(AppRoutes.login);
-                  }
-                },
-                builder: (context, state) {
-                  final isLoading = state.status == AuthStatus.loading;
-                  return AppButton(
-                    label: isLoading ? 'Signing out...' : 'Sign Out',
-                    isOutlined: true,
-                    onTap: isLoading
-                        ? () {}
-                        : () => context.read<AuthCubit>().logout(),
-                    backgroundColor: AppColors.error.withOpacity(0.05),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,3 +1,5 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
@@ -32,13 +34,13 @@ class LuxeStoreApp extends StatelessWidget {
         ),
         BlocProvider<ProductCubit>(create: (_) => sl<ProductCubit>()),
         BlocProvider<cart.CartCubit>(create: (_) => sl<cart.CartCubit>()),
-        BlocProvider<WishlistCubit>(
-          create: (_) => sl<WishlistCubit>()..loadWishlist(),
-        ),
+
+        // ✅ WishlistCubit بدون loadWishlist() تلقائي.
+        // الـ WishlistScreen نفسها هتطلب البيانات لما المستخدم يفتحها وهو مسجّل.
+        BlocProvider<WishlistCubit>(create: (_) => sl<WishlistCubit>()),
+
         BlocProvider<AddressCubit>(create: (_) => AddressCubit()),
-        BlocProvider<CheckoutCubit>(
-          create: (_) => sl<CheckoutCubit>(),
-        ),
+        BlocProvider<CheckoutCubit>(create: (_) => sl<CheckoutCubit>()),
         BlocProvider<orders.OrdersCubit>(
           create: (_) => sl<orders.OrdersCubit>(),
         ),

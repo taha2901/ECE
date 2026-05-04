@@ -1,4 +1,6 @@
 // lib/features/wishlist/view/wishlist_screen.dart
+// ✅ تغيير بسيط: تحوّل الـ WishlistScreen لـ StatefulWidget
+//    عشان تطلب البيانات في initState (بعد ما الـ GuestGuard تأكّد إن المستخدم مسجّل).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,8 +11,26 @@ import 'package:real_ecommerce/features/cart/logic/cubit.dart';
 import 'package:real_ecommerce/features/wishlist/data/models/wishlist_model.dart';
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
 import 'package:real_ecommerce/features/wishlist/logic/states.dart';
-class WishlistScreen extends StatelessWidget {
+
+class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
+
+  @override
+  State<WishlistScreen> createState() => _WishlistScreenState();
+}
+
+class _WishlistScreenState extends State<WishlistScreen> {
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ نحمّل الـ wishlist مرة واحدة فقط، وبس لو المستخدم وصلها (يعني مسجّل)
+    if (!_loaded) {
+      context.read<WishlistCubit>().loadWishlist();
+      _loaded = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +46,6 @@ class WishlistScreen extends StatelessWidget {
               }
               return TextButton(
                 onPressed: () {
-                  // Add all to cart
                   for (final item in state.items) {
                     context.read<CartCubit>().addToCart(
                           productId: item.product.id,
@@ -54,14 +73,12 @@ class WishlistScreen extends StatelessWidget {
       ),
       body: BlocBuilder<WishlistCubit, WishlistState>(
         builder: (context, state) {
-          // Loading
           if (state is WishlistLoading) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.accent),
             );
           }
 
-          // Error
           if (state is WishlistError) {
             return Center(
               child: Column(
@@ -84,7 +101,6 @@ class WishlistScreen extends StatelessWidget {
             );
           }
 
-          // Loaded or ActionLoading
           final items = state is WishlistLoaded
               ? state.items
               : state is WishlistActionLoading
@@ -139,6 +155,8 @@ class WishlistScreen extends StatelessWidget {
   }
 }
 
+// ── WishlistItemCard (بدون تغيير) ─────────────────────
+
 class WishlistItemCard extends StatelessWidget {
   final WishlistModel item;
   final bool isActionLoading;
@@ -162,7 +180,6 @@ class WishlistItemCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image + Remove button
           Expanded(
             child: Stack(
               children: [
@@ -200,8 +217,6 @@ class WishlistItemCard extends StatelessWidget {
                               size: 44, color: AppColors.textHint),
                         ),
                 ),
-
-                // Remove from wishlist button
                 Positioned(
                   top: 8,
                   right: 8,
@@ -237,8 +252,6 @@ class WishlistItemCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // Info
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
@@ -251,8 +264,7 @@ class WishlistItemCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(product.formattedPrice,
-                    style: AppTypography.priceSmall),
+                Text(product.formattedPrice, style: AppTypography.priceSmall),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
@@ -273,8 +285,7 @@ class WishlistItemCard extends StatelessWidget {
                                 Text('${product.name} added to cart!')),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero),
+                    style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(
                       'Add to Cart',
                       style: AppTypography.labelSmall

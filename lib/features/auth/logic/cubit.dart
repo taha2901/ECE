@@ -103,7 +103,23 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     emit(state.copyWith(status: AuthStatus.loading));
     await _repository.logout();
+    await _clearAuthData();
     emit(state.copyWith(status: AuthStatus.loggedOut));
+  }
+
+  Future<void> _clearAuthData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('auth_refresh_token');
+      await prefs.remove('user_id');
+      await prefs.remove('username');
+      await prefs.remove('email');
+      await prefs.remove('first_name');
+      await prefs.remove('last_name');
+    } catch (e) {
+      // ignore
+    }
   }
 
   Future<void> _saveAuthData(dynamic data) async {

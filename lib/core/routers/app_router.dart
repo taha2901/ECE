@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_ecommerce/features/auth/view/forgot_password_screen.dart';
 import 'package:real_ecommerce/features/auth/view/login.dart';
 import 'package:real_ecommerce/features/auth/view/otp_screen.dart';
@@ -17,6 +16,8 @@ import 'package:real_ecommerce/features/orders/view/orders_screen.dart';
 import 'package:real_ecommerce/features/cart/view/cart_screens.dart';
 import 'package:real_ecommerce/features/payment/view/payment_screen.dart';
 import 'package:real_ecommerce/features/splash/splash_screen.dart';
+import 'package:real_ecommerce/features/profile/view/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Route Names ───────────────────────────────
 abstract class AppRoutes {
@@ -47,31 +48,64 @@ abstract class AppRoutes {
 // ─── Router Config ─────────────────────────────
 
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
+  // ✅ البداية مباشرة بالهوم — لا splash ولا redirect إجباري للـ login
+  initialLocation: AppRoutes.home,
+
   redirect: (context, state) async {
+    // ✅ Splash يوجّه للهوم مباشرة (لو حابب تبقي السبلاش فقط كـ intro قصير)
+    if (state.matchedLocation == AppRoutes.splash) {
+      return AppRoutes.home;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     final isLoggedIn = token != null && token.isNotEmpty;
 
-    // If user is not logged in and trying to access protected routes
-    final protectedRoutes = [AppRoutes.home, AppRoutes.cart, AppRoutes.profile, AppRoutes.cartTotal, AppRoutes.enhancedCheckout];
-    final isProtectedRoute = protectedRoutes.any((route) => state.matchedLocation == route || state.matchedLocation.startsWith(route));
+    // ✅ صفحات محتاجة توكن على مستوى الراوتر (مش الـ layout tabs)
+    // يعني لو دخل /cart-total أو /enhanced-checkout مباشرة من الـ URL
+    final hardProtectedRoutes = [
+      AppRoutes.cartTotal,
+      AppRoutes.enhancedCheckout,
+      AppRoutes.checkout,
+      AppRoutes.payment,
+      AppRoutes.paymentSuccess,
+      AppRoutes.orders,
+      AppRoutes.addAddress,
+      AppRoutes.myAddresses,
+      AppRoutes.offers,
+      AppRoutes.notifications,
+      AppRoutes.adminDashboard,
+    ];
 
-    if (!isLoggedIn && isProtectedRoute && state.matchedLocation != AppRoutes.splash) {
+    final isHardProtected = hardProtectedRoutes.any(
+      (r) => state.matchedLocation == r || state.matchedLocation.startsWith(r),
+    );
+
+    if (!isLoggedIn && isHardProtected) {
       return AppRoutes.login;
     }
 
-    // If user is logged in and on auth screens, redirect to home
-    final authRoutes = [AppRoutes.login, AppRoutes.register, AppRoutes.forgotPass, AppRoutes.otp];
-    final isAuthRoute = authRoutes.any((route) => state.matchedLocation == route || state.matchedLocation.startsWith(route));
+    // ✅ لو مسجّل دخول وعلى صفحة auth → روح الهوم
+    final authRoutes = [
+      AppRoutes.login,
+      AppRoutes.register,
+      AppRoutes.forgotPass,
+      AppRoutes.otp,
+    ];
+
+    final isAuthRoute = authRoutes.any(
+      (r) => state.matchedLocation == r || state.matchedLocation.startsWith(r),
+    );
 
     if (isLoggedIn && isAuthRoute) {
       return AppRoutes.home;
     }
 
-    return null; // No redirect needed
+    return null;
   },
+
   routes: [
+    // Splash — ما هيُعرضش لأن الـ redirect فوق بيحوّله لـ home فوراً
     GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
 
     GoRoute(
@@ -79,29 +113,26 @@ final appRouter = GoRouter(
       builder: (_, __) => const OnboardingScreen(),
     ),
 
-    GoRoute(path: AppRoutes.login, builder: (_, __) =>  LoginScreen()),
+    // ✅ الهوم (LayoutScreen) — متاح للجميع
+    GoRoute(
+      path: AppRoutes.home,
+      builder: (_, __) => const LayoutScreen(),
+    ),
 
+    // Auth screens
+    GoRoute(path: AppRoutes.login, builder: (_, __) => LoginScreen()),
     GoRoute(path: AppRoutes.register, builder: (_, __) => RegisterScreen()),
-
     GoRoute(
       path: AppRoutes.forgotPass,
       builder: (_, __) => const ForgotPasswordScreen(),
     ),
-
     GoRoute(
       path: AppRoutes.otp,
       builder: (_, state) =>
           OtpVerificationScreen(phoneOrEmail: state.extra as String? ?? ''),
     ),
 
-    GoRoute(
-  path: AppRoutes.home,
-  builder: (_, __) => const LayoutScreen(),
-),
-
-
     GoRoute(path: AppRoutes.orders, builder: (_, __) => const OrdersScreen()),
-
     GoRoute(path: AppRoutes.offers, builder: (_, __) => const OffersScreen()),
 
     GoRoute(
@@ -153,11 +184,18 @@ final appRouter = GoRouter(
       builder: (_, __) => const AddressScreen(),
     ),
 
-    // ── Admin ──────────────────────────────────
+    GoRoute(
+      path: AppRoutes.profile,
+      builder: (_, __) => const ProfileScreen(),
+    ),
+
+    GoRoute(
+      path: AppRoutes.adminDashboard,
+      builder: (_, __) => const _PlaceholderScreen(title: 'Admin Dashboard'),
+    ),
   ],
 );
 
-// placeholder لأي صفحة لسا متعملتش
 class _PlaceholderScreen extends StatelessWidget {
   final String title;
   const _PlaceholderScreen({required this.title});
