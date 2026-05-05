@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/auth/logic/cubit.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart';
 import 'package:real_ecommerce/features/home/data/models/product_model.dart';
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
@@ -239,6 +240,24 @@ class ProductCardGrid extends StatelessWidget {
                       ),
                       GestureDetector(
                         onTap: () {
+                          final isLoggedIn = context.read<AuthCubit>().state.isSuccess;
+                          if (!isLoggedIn) {
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Please sign in to add items to your cart.',
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'Sign In',
+                                    onPressed: () => context.push(AppRoutes.login),
+                                  ),
+                                ),
+                              );
+                            return;
+                          }
+
                           context.read<CartCubit>().addToCart(
                             productId: product.id,
                             quantity: 1,

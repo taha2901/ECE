@@ -2,6 +2,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_ecommerce/features/auth/data/models/auth_login_request.dart';
 import 'package:real_ecommerce/features/auth/data/models/auth_register_request.dart';
+import 'package:real_ecommerce/features/auth/data/models/auth_response_model.dart';
+import 'package:real_ecommerce/features/auth/data/models/auth_tokens_model.dart';
+import 'package:real_ecommerce/features/auth/data/models/auth_user_model.dart';
 import 'package:real_ecommerce/features/auth/data/repositories/auth_repository.dart';
 import 'package:real_ecommerce/features/auth/logic/states.dart';
 
@@ -16,14 +19,63 @@ class AuthCubit extends Cubit<AuthState> {
       final token = prefs.getString('auth_token');
       final refreshToken = prefs.getString('auth_refresh_token');
 
-      if (token != null && refreshToken != null) {
+      if (token != null && token.isNotEmpty && refreshToken != null && refreshToken.isNotEmpty) {
+        final authData = _restoreAuthDataFromPrefs(prefs, token, refreshToken);
         emit(
-          state.copyWith(status: AuthStatus.success, message: 'Auto-logged in'),
+          state.copyWith(
+            status: AuthStatus.success,
+            authData: authData,
+            message: 'Auto-logged in',
+          ),
         );
+        await _refreshUserProfile();
+        return;
       }
+
+      emit(state.copyWith(status: AuthStatus.initial, message: null));
     } catch (e) {
       emit(state.copyWith(status: AuthStatus.initial, message: null));
     }
+  }
+
+  AuthResponseModel? _restoreAuthDataFromPrefs(
+    SharedPreferences prefs,
+    String token,
+    String refreshToken,
+  ) {
+    final userId = prefs.getString('user_id');
+    final username = prefs.getString('username');
+    final email = prefs.getString('email');
+    final firstName = prefs.getString('first_name');
+    final lastName = prefs.getString('last_name');
+    final phone = prefs.getString('phone') ?? '';
+    final address = prefs.getString('address') ?? '';
+    final city = prefs.getString('city') ?? '';
+    final country = prefs.getString('country') ?? '';
+    final isAdmin = prefs.getBool('is_admin') ?? false;
+    final isStaff = prefs.getBool('is_staff') ?? false;
+
+    final tokens = AuthTokensModel(access: token, refresh: refreshToken);
+    if (userId == null || username == null || email == null || firstName == null || lastName == null) {
+      return AuthResponseModel(user: null, tokens: tokens);
+    }
+
+    final parsedUserId = int.tryParse(userId) ?? 0;
+    final user = AuthUserModel(
+      id: parsedUserId,
+      username: username,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
+      address: address,
+      city: city,
+      country: country,
+      isAdmin: isAdmin,
+      isStaff: isStaff,
+    );
+
+    return AuthResponseModel(user: user, tokens: tokens);
   }
 
   Future<void> login({
@@ -46,6 +98,7 @@ class AuthCubit extends Cubit<AuthState> {
             message: 'Signed in successfully',
           ),
         );
+        await _refreshUserProfile();
       },
       failure: (errorHandler) => emit(
         state.copyWith(
@@ -89,6 +142,7 @@ class AuthCubit extends Cubit<AuthState> {
             message: 'Registration completed',
           ),
         );
+        await _refreshUserProfile();
       },
       failure: (errorHandler) => emit(
         state.copyWith(
@@ -99,12 +153,31 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
+  Future<void> _refreshUserProfile() async {
+    final profileResult = await _repository.getProfile();
+    profileResult.when(
+      success: (user) async {
+        final tokens = state.authData?.tokens;
+        if (tokens != null) {
+          final updatedAuthData = AuthResponseModel(user: user, tokens: tokens);
+          await _saveAuthData(updatedAuthData);
+          emit(state.copyWith(authData: updatedAuthData));
+        }
+      },
+      failure: (_) {},
+    );
+  }
+
   /// ✅ Logout — بيكلم الـ API وبيمسح البيانات المحلية
   Future<void> logout() async {
     emit(state.copyWith(status: AuthStatus.loading));
     await _repository.logout();
     await _clearAuthData();
-    emit(state.copyWith(status: AuthStatus.loggedOut));
+    emit(state.copyWith(
+      status: AuthStatus.loggedOut,
+      authData: null,
+      message: 'Logged out successfully',
+    ));
   }
 
   Future<void> _clearAuthData() async {
@@ -117,6 +190,12 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.remove('email');
       await prefs.remove('first_name');
       await prefs.remove('last_name');
+      await prefs.remove('phone');
+      await prefs.remove('address');
+      await prefs.remove('city');
+      await prefs.remove('country');
+      await prefs.remove('is_admin');
+      await prefs.remove('is_staff');
     } catch (e) {
       // ignore
     }

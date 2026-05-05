@@ -193,7 +193,7 @@ class LayoutScreen extends StatelessWidget {
     const HomeScreen(),
     const GuestGuardScreen(featureName: 'Cart',     child: CartScreen()),
     const GuestGuardScreen(featureName: 'Wishlist', child: WishlistScreen()),
-    const GuestGuardScreen(featureName: 'Profile',  child: ProfileScreen()),
+    const ProfileScreen(),
   ];
 
   @override

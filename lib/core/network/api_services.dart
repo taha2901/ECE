@@ -58,4 +58,8 @@ class ApiService {
   Future<Response> getOrderDetails(int id) async {
     return await _dio.get(ApiConstants.orderDetails(id));
   }
+
+  Future<Response> getProfile() async {
+    return await _dio.get(ApiConstants.me);
+  }
 }
