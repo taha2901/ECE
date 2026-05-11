@@ -29,6 +29,9 @@ class ApiConstants {
   static String removeFromWishlist(int productId) =>
       '/wishlist/remove/$productId/';
 
+  // Coupons
+  static const String activeCoupons = '/coupons/active/';
+
   // Categories
   static const String getAllCategories = '/categories/';
   static String getCategoryDetails(int id) => '/categories/$id/';
@@ -97,6 +100,7 @@ class ApiConstants {
   // =================== Cart & Orders ===================
   static const String cartTotal = '/cart/total/';
   static const String orders = '/orders/';
+  static const String myOrders = '/orders/my/';
   static String orderDetails(int id) => '/orders/$id/';
 }
 

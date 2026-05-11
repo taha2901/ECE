@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
+import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/core/widgets/common_widgets.dart';
 import 'package:real_ecommerce/features/address/view/my_addresses_page.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
+import 'package:real_ecommerce/features/orders/logic/cubit.dart' as orders;
+import 'package:real_ecommerce/features/orders/logic/states.dart' as orders_state;
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
 import 'package:real_ecommerce/features/wishlist/logic/states.dart';
 import 'package:real_ecommerce/features/profile/view/widgets/profile_avatar.dart';
@@ -24,6 +27,8 @@ class ProfileDesktop extends StatelessWidget {
   final String displayName;
   final String subtitle;
   final String? username;
+  final String phone;
+  final String location;
   final bool isLoggedIn;
   final VoidCallback onShowLoginDialog;
 
@@ -32,6 +37,8 @@ class ProfileDesktop extends StatelessWidget {
     required this.displayName,
     required this.subtitle,
     this.username,
+    required this.phone,
+    required this.location,
     required this.isLoggedIn,
     required this.onShowLoginDialog,
   });
@@ -64,6 +71,8 @@ class ProfileDesktop extends StatelessWidget {
                     displayName: displayName,
                     subtitle: subtitle,
                     username: username,
+                    phone: phone,
+                    location: location,
                     isLoggedIn: isLoggedIn,
                     onShowLoginDialog: onShowLoginDialog,
                   ),
@@ -93,6 +102,8 @@ class _ProfileSidebar extends StatelessWidget {
   final String displayName;
   final String subtitle;
   final String? username;
+  final String phone;
+  final String location;
   final bool isLoggedIn;
   final VoidCallback onShowLoginDialog;
 
@@ -100,6 +111,8 @@ class _ProfileSidebar extends StatelessWidget {
     required this.displayName,
     required this.subtitle,
     this.username,
+    required this.phone,
+    required this.location,
     required this.isLoggedIn,
     required this.onShowLoginDialog,
   });
@@ -123,6 +136,8 @@ class _ProfileSidebar extends StatelessWidget {
                 displayName: displayName,
                 subtitle: subtitle,
                 username: username,
+                phone: phone,
+                location: location,
               ),
               const SizedBox(height: AppSpacing.xl),
               _buildStats(context),
@@ -145,7 +160,7 @@ class _ProfileSidebar extends StatelessWidget {
                   label: 'Sign Out',
                   isOutlined: true,
                   onTap: () => context.read<AuthCubit>().logout(),
-                  backgroundColor: AppColors.error.withOpacity(0.05),
+                  backgroundColor: AppColors.error.withValues(alpha: 0.05),
                 )
               : AppButton(
                   label: 'Sign In',
@@ -160,12 +175,19 @@ class _ProfileSidebar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ProfileStatItem(
-          value: isLoggedIn ? '12' : '0',
-          label: 'Orders',
-          onTap: () => isLoggedIn
-              ? context.push(AppRoutes.orders)
-              : onShowLoginDialog(),
+        BlocBuilder<orders.OrdersCubit, orders_state.OrdersState>(
+          builder: (context, orderState) {
+            final ordersCount = orderState is orders_state.OrdersLoaded
+                ? orderState.orders.length
+                : 0;
+            return ProfileStatItem(
+              value: isLoggedIn ? ordersCount.toString() : '0',
+              label: 'Orders',
+              onTap: () => isLoggedIn
+                  ? context.push(AppRoutes.orders)
+                  : onShowLoginDialog(),
+            );
+          },
         ),
         const ProfileStatDivider(),
         BlocBuilder<WishlistCubit, WishlistState>(
@@ -228,9 +250,7 @@ class _ProfileContent extends StatelessWidget {
                 ),
                 child: Text(
                   'Account',
-                  style: AppColors.textSecondary != null
-                      ? null
-                      : null, // placeholder — استخدم AppTypography.labelLarge لو حابب
+                  style: AppTypography.labelLarge,
                 ),
               ),
               ProfileMenuItem(

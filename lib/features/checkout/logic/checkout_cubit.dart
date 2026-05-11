@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:real_ecommerce/features/address/logic/address_cubit.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
 import 'package:real_ecommerce/features/auth/logic/states.dart';
 import 'package:real_ecommerce/features/checkout/data/models/order_models.dart';
@@ -8,8 +9,9 @@ import 'package:real_ecommerce/features/checkout/logic/checkout_state.dart';
 class CheckoutCubit extends Cubit<CheckoutState> {
   final CheckoutRepository _repository;
   final AuthCubit _authCubit;
+  final AddressCubit _addressCubit;
 
-  CheckoutCubit(this._repository, this._authCubit)
+  CheckoutCubit(this._repository, this._authCubit, this._addressCubit)
       : super(const CheckoutState());
 
   /// احصل على إجمالي السلة
@@ -69,22 +71,70 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     ));
   }
 
+  /// حدّث كوبون
+  void updateCouponCode(String? coupon) {
+    emit(state.copyWith(coupon: coupon));
+  }
+
   /// جلب بيانات المستخدم من الـ auth إذا كان مسجل دخول
+  /// ✅ أولاً: احصل على العنوان من SQLite (من الخريطة المحفوظة)
+  /// ثانياً: إذا لم يوجد، استخدم العنوان من بيانات المستخدم
   void loadUserDataFromAuth() {
     final authState = _authCubit.state;
     if (authState.status == AuthStatus.success &&
         authState.authData != null &&
         authState.authData!.user != null) {
       final userData = authState.authData!.user!;
+
+      final savedAddress = _addressCubit.state.defaultAddress;
+      String? address;
+      String? city;
+
+      if (savedAddress != null) {
+        final parsed = _splitSavedAddress(savedAddress.fullAddress);
+        address = parsed['address'];
+        final parsedCity = parsed['city'];
+        city = parsedCity?.isNotEmpty == true
+            ? parsedCity
+            : (userData.city.isNotEmpty ? userData.city : null);
+      } else {
+        address = userData.address.isNotEmpty ? userData.address : null;
+        city = userData.city.isNotEmpty ? userData.city : null;
+      }
+
       updateUserData(
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         phone: userData.phone,
-        address: userData.address,
-        city: userData.city,
+        address: address,
+        city: city,
       );
     }
+  }
+
+  Map<String, String?> _splitSavedAddress(String fullAddress) {
+    final parts = fullAddress
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.length >= 3) {
+      final country = parts.removeLast();
+      final governorate = parts.removeLast();
+      final cityValue = parts.join(', ');
+      final addressValue = [governorate, country].join(', ');
+      return {'address': addressValue, 'city': cityValue};
+    }
+
+    if (parts.length == 2) {
+      final country = parts.removeLast();
+      final cityValue = parts.join(', ');
+      return {'address': country, 'city': cityValue};
+    }
+
+    return {'address': fullAddress, 'city': null};
   }
 
   /// إنشاء أوردر
@@ -151,6 +201,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
       total: total.toStringAsFixed(2),
       paymentMethod: state.paymentMethod ?? 'deposit',
       items: orderItems,
+      coupon: state.coupon?.isNotEmpty == true ? state.coupon : null,
     );
 
     final result = await _repository.createOrder(request);

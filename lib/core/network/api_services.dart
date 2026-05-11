@@ -34,6 +34,10 @@ class ApiService {
     return await _dio.get(ApiConstants.getAllCategories);
   }
 
+  Future<Response> getActiveCoupons() async {
+    return await _dio.get(ApiConstants.activeCoupons);
+  }
+
   Future<Response> getCategoryById(int id) async {
     return await _dio.get(ApiConstants.getCategoryDetails(id));
   }
@@ -52,7 +56,7 @@ class ApiService {
   }
 
   Future<Response> getOrders() async {
-    return await _dio.get(ApiConstants.orders);
+    return await _dio.get(ApiConstants.myOrders);
   }
 
   Future<Response> getOrderDetails(int id) async {

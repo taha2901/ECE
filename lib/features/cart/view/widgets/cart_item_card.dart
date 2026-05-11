@@ -5,6 +5,7 @@ import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/features/cart/data/models/cart_models.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart';
+import 'package:real_ecommerce/features/cart/view/widgets/cart_dialogs.dart';
 
 // ══════════════════════════════════════════════════════════
 //  CART ITEM CARD  —  مشتركة بين Mobile و Desktop
@@ -28,12 +29,21 @@ class _CartItemCardState extends State<CartItemCard> {
     _quantity = widget.item.quantity;
   }
 
+  // تحديث المحلي عند تغيير الـ item من الـ BLoC (rollback)
+  @override
+  void didUpdateWidget(CartItemCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.quantity != widget.item.quantity) {
+      _quantity = widget.item.quantity;
+    }
+  }
+
   Color _parseColor(String rawColor) {
     try {
       if (rawColor.startsWith('#')) {
         return Color(int.parse(rawColor.replaceFirst('#', '0xFF')));
       }
-      final named = {
+      const named = {
         'black': Colors.black,
         'white': Colors.white,
         'red': Colors.red,
@@ -46,42 +56,71 @@ class _CartItemCardState extends State<CartItemCard> {
     }
   }
 
+  void _increment() {
+    setState(() => _quantity++);
+    context.read<CartCubit>().updateCartItem(
+          widget.item.id,
+          _quantity,
+          widget.item.size,
+          widget.item.color,
+        );
+  }
+
+  void _decrement() {
+    if (_quantity <= 1) return;
+    setState(() => _quantity--);
+    context.read<CartCubit>().updateCartItem(
+          widget.item.id,
+          _quantity,
+          widget.item.size,
+          widget.item.color,
+        );
+  }
+
+  Future<void> _confirmRemove() async {
+    final confirmed = await showRemoveItemDialog(
+      context,
+      productName: widget.item.product.name,
+    );
+    if (confirmed == true && mounted) {
+      context.read<CartCubit>().removeFromCart(widget.item.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
       key: ValueKey(widget.item.id),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Remove Item'),
-            content: Text('Remove ${widget.item.product.name} from cart?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Remove',
-                    style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
+      confirmDismiss: (_) => showRemoveItemDialog(
+        context,
+        productName: widget.item.product.name,
+      ),
       onDismissed: (_) =>
           context.read<CartCubit>().removeFromCart(widget.item.id),
+
+      // ── خلفية السحب (حمراء يمين→يسار) ──────────────
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: AppSpacing.xl),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withOpacity(0.12),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.delete_outline_rounded,
+                color: AppColors.error, size: 26),
+            const SizedBox(height: 4),
+            Text(
+              'Remove',
+              style: AppTypography.labelSmall.copyWith(color: AppColors.error),
+            ),
+          ],
+        ),
       ),
+
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -119,18 +158,38 @@ class _CartItemCardState extends State<CartItemCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.item.product.name,
-                    style: AppTypography.labelLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  // اسم المنتج + زرار الحذف
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.item.product.name,
+                          style: AppTypography.labelLarge,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _confirmRemove,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: AppColors.textHint,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
+
+                  // اللون والمقاس
                   Row(
                     children: [
                       Container(
-                        width: 24,
-                        height: 24,
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
                           color: _parseColor(widget.item.color),
                           shape: BoxShape.circle,
@@ -147,6 +206,8 @@ class _CartItemCardState extends State<CartItemCard> {
                     ],
                   ),
                   const SizedBox(height: 12),
+
+                  // السعر وضبط الكمية
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -156,26 +217,8 @@ class _CartItemCardState extends State<CartItemCard> {
                       ),
                       QuantityControl(
                         quantity: _quantity,
-                        onIncrement: () {
-                          setState(() => _quantity++);
-                          context.read<CartCubit>().updateCartItem(
-                                widget.item.id,
-                                _quantity,
-                                widget.item.size,
-                                widget.item.color,
-                              );
-                        },
-                        onDecrement: () {
-                          if (_quantity > 1) {
-                            setState(() => _quantity--);
-                            context.read<CartCubit>().updateCartItem(
-                                  widget.item.id,
-                                  _quantity,
-                                  widget.item.size,
-                                  widget.item.color,
-                                );
-                          }
-                        },
+                        onIncrement: _increment,
+                        onDecrement: _decrement,
                         isSmall: true,
                       ),
                     ],
@@ -191,7 +234,7 @@ class _CartItemCardState extends State<CartItemCard> {
 }
 
 // ══════════════════════════════════════════════════════════
-//  QUANTITY CONTROL  —  مشتركة بين Mobile و Desktop
+//  QUANTITY CONTROL
 // ══════════════════════════════════════════════════════════
 
 class QuantityControl extends StatelessWidget {
@@ -216,29 +259,37 @@ class QuantityControl extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           GestureDetector(
             onTap: onDecrement,
             child: Padding(
               padding: EdgeInsets.all(isSmall ? 4 : 8),
-              child: Icon(Icons.remove,
-                  size: isSmall ? 16 : 20, color: AppColors.textHint),
+              child: Icon(
+                Icons.remove,
+                size: isSmall ? 16 : 20,
+                color: quantity <= 1 ? AppColors.textHint.withOpacity(0.4) : AppColors.textHint,
+              ),
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isSmall ? 6 : 8),
+            padding: EdgeInsets.symmetric(horizontal: isSmall ? 8 : 12),
             child: Text(
               '$quantity',
-              style:
-                  isSmall ? AppTypography.labelMedium : AppTypography.labelLarge,
+              style: isSmall
+                  ? AppTypography.labelMedium
+                  : AppTypography.labelLarge,
             ),
           ),
           GestureDetector(
             onTap: onIncrement,
             child: Padding(
               padding: EdgeInsets.all(isSmall ? 4 : 8),
-              child: Icon(Icons.add,
-                  size: isSmall ? 16 : 20, color: AppColors.accent),
+              child: Icon(
+                Icons.add,
+                size: isSmall ? 16 : 20,
+                color: AppColors.accent,
+              ),
             ),
           ),
         ],

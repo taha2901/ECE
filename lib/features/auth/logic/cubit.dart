@@ -7,6 +7,9 @@ import 'package:real_ecommerce/features/auth/data/models/auth_tokens_model.dart'
 import 'package:real_ecommerce/features/auth/data/models/auth_user_model.dart';
 import 'package:real_ecommerce/features/auth/data/repositories/auth_repository.dart';
 import 'package:real_ecommerce/features/auth/logic/states.dart';
+import 'package:real_ecommerce/core/helpers/constants.dart';
+import 'package:real_ecommerce/core/helpers/shared_pref_helper.dart';
+import 'package:real_ecommerce/core/network/dio_factory.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repository;
@@ -21,6 +24,12 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (token != null && token.isNotEmpty && refreshToken != null && refreshToken.isNotEmpty) {
         final authData = _restoreAuthDataFromPrefs(prefs, token, refreshToken);
+
+        // Rehydrate Dio headers and secure storage for auto-login.
+        await SharedPrefHelper.setSecuredString(SharedPrefKeys.userToken, token);
+        await SharedPrefHelper.setSecuredString(SharedPrefKeys.refreshToken, refreshToken);
+        DioFactory.setTokenIntoHeaderAfterLogin(token);
+
         emit(
           state.copyWith(
             status: AuthStatus.success,
@@ -151,6 +160,11 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       ),
     );
+  }
+
+  /// ✅ تحديث بيانات الملف الشخصي من الـ API — يمكن استدعاؤه من أي مكان
+  Future<void> refreshUserProfile() async {
+    await _refreshUserProfile();
   }
 
   Future<void> _refreshUserProfile() async {

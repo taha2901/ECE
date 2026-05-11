@@ -58,7 +58,7 @@ class DescriptionTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       child: Text(
         description.isEmpty ? 'No description available' : description,
         style: AppTypography.bodyMedium.copyWith(height: 1.7, fontSize: 14),
@@ -79,9 +79,14 @@ class SpecsTab extends StatelessWidget {
       ('Care', 'Machine washable'),
       ('Warranty', '1 Year'),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: specs.map((s) => SpecRow(label: s.$1, value: s.$2)).toList(),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: specs
+            .map((s) => SpecRow(label: s.$1, value: s.$2))
+            .toList(),
+      ),
     );
   }
 }

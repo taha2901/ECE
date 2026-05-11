@@ -6,8 +6,21 @@ import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
 import 'package:real_ecommerce/features/checkout/logic/checkout_state.dart';
 
-class ReviewStep extends StatelessWidget {
+class ReviewStep extends StatefulWidget {
   const ReviewStep({super.key});
+
+  @override
+  State<ReviewStep> createState() => _ReviewStepState();
+}
+
+class _ReviewStepState extends State<ReviewStep> {
+  final TextEditingController _couponController = TextEditingController();
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +28,10 @@ class ReviewStep extends StatelessWidget {
       builder: (context, state) {
         if (state.cartTotal == null) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        if (_couponController.text != (state.coupon ?? '')) {
+          _couponController.text = state.coupon ?? '';
         }
 
         final cartTotal = state.cartTotal!;
@@ -50,12 +67,27 @@ class ReviewStep extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
 
             _ReviewSection(
+              title: 'Coupon',
+              children: [
+                _CouponInput(
+                  controller: _couponController,
+                  currentCoupon: state.coupon,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            _ReviewSection(
               title: 'Order Summary',
               children: [
                 _ReviewRow('Items', '${cartTotal.items.length}'),
                 _ReviewRow('Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
                 _ReviewRow('Shipping', '\$${shipping.toStringAsFixed(2)}'),
                 _ReviewRow('Tax', '\$${tax.toStringAsFixed(2)}'),
+                if (state.coupon != null && state.coupon!.isNotEmpty) ...[
+                  const Divider(),
+                  _ReviewRow('Coupon', state.coupon!),
+                ],
                 const Divider(),
                 _ReviewRow(
                   'Total',
@@ -67,6 +99,53 @@ class ReviewStep extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _CouponInput extends StatelessWidget {
+  final TextEditingController controller;
+  final String? currentCoupon;
+
+  const _CouponInput({
+    required this.controller,
+    required this.currentCoupon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isApplied = currentCoupon != null && currentCoupon!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: 'Coupon Code',
+            hintText: 'Enter coupon code',
+            border: const OutlineInputBorder(),
+            suffixIcon: TextButton(
+              onPressed: () {
+                final code = controller.text.trim();
+                if (code.isNotEmpty) {
+                  context.read<CheckoutCubit>().updateCouponCode(code);
+                } else {
+                  context.read<CheckoutCubit>().updateCouponCode(null);
+                }
+              },
+              child: Text(isApplied ? 'Update' : 'Apply'),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          isApplied
+              ? 'Coupon "$currentCoupon" added. It will be sent with the order.'
+              : 'Add a coupon code if you have one. Otherwise you can continue without it.',
+          style: AppTypography.bodySmall.copyWith(color: AppColors.textHint),
+        ),
+      ],
     );
   }
 }

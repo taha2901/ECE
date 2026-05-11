@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
@@ -9,6 +10,8 @@ class CheckoutTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
+  final bool onlyDigits;
 
   const CheckoutTextField({
     super.key,
@@ -16,6 +19,8 @@ class CheckoutTextField extends StatelessWidget {
     required this.controller,
     required this.hint,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.onlyDigits = false,
   });
 
   @override
@@ -28,6 +33,16 @@ class CheckoutTextField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          textInputAction: textInputAction ?? TextInputAction.next,
+          inputFormatters: (onlyDigits || keyboardType == TextInputType.number)
+              ? [FilteringTextInputFormatter.digitsOnly]
+              : null,
+          onSubmitted: (_) {
+            final action = textInputAction ?? TextInputAction.next;
+            if (action == TextInputAction.next) {
+              FocusScope.of(context).nextFocus();
+            }
+          },
           decoration: InputDecoration(
             hintText: hint,
             border: OutlineInputBorder(

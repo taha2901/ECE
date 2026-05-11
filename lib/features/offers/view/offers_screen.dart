@@ -1,60 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/coupons/logic/cubit.dart';
+import 'package:real_ecommerce/features/coupons/logic/states.dart';
+import 'package:real_ecommerce/features/coupons/view/coupon_card.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/common_widgets.dart';
 
 // ═══════════════════════════════════════════════
 // OFFERS & COUPONS SCREEN
 // ═══════════════════════════════════════════════
-class OffersScreen extends StatefulWidget {
+class OffersScreen extends StatelessWidget {
   const OffersScreen({super.key});
-
-  @override
-  State<OffersScreen> createState() => _OffersScreenState();
-}
-
-class _OffersScreenState extends State<OffersScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Offers & Coupons'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.accent,
-          unselectedLabelColor: AppColors.textHint,
-          indicatorColor: AppColors.accent,
-          tabs: const [
-            Tab(text: 'Flash Sales'),
-            Tab(text: 'Coupons'),
-            Tab(text: 'Deals'),
-          ],
-        ),
+        title: const Text('Coupons'),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          FlashSalesTab(),
-          CouponsTab(),
-          DealsTab(),
-        ],
-      ),
+      body: const CouponsTab(),
     );
   }
 }
 
-// ─── Flash Sales Tab ───────────────────────────
+// ─── Coupons Tab ───────────────────────────────
 class FlashSalesTab extends StatelessWidget {
   const FlashSalesTab({super.key});
 
@@ -96,7 +68,7 @@ class FlashSalesTab extends StatelessWidget {
                     Text(
                       'Ends in 06:24:38',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.8),
+                        color: AppColors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -230,20 +202,59 @@ class _FlashProductCard extends StatelessWidget {
 }
 
 // ─── Coupons Tab ───────────────────────────────
-class CouponsTab extends StatelessWidget {
+class CouponsTab extends StatefulWidget {
   const CouponsTab({super.key});
 
   @override
+  State<CouponsTab> createState() => _CouponsTabState();
+}
+
+class _CouponsTabState extends State<CouponsTab> {
+  @override
+  void initState() {
+    super.initState();
+    final couponCubit = context.read<CouponCubit>();
+    if (couponCubit.state is CouponInitial) {
+      couponCubit.loadCoupons();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
-      itemCount: 5,
-      itemBuilder: (_, i) => CouponCard(
-        code: ['SAVE20', 'WELCOME10', 'FLASH50', 'FREE_SHIP', 'VIP30'][i],
-        discount: ['20% Off', '10% Off', '50% Off', 'Free Shipping', '30% Off'][i],
-        expiry: 'Expires Jan 31, 2025',
-        isUsed: i == 4,
-      ),
+    return BlocBuilder<CouponCubit, CouponState>(
+      builder: (context, state) {
+        if (state is CouponLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is CouponError) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            child: Center(
+              child: Text(state.message, style: AppTypography.bodyMedium),
+            ),
+          );
+        }
+
+        if (state is CouponLoaded) {
+          if (state.coupons.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.pagePadding),
+                child: Text('No active coupons at the moment.'),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            itemCount: state.coupons.length,
+            itemBuilder: (_, index) => ActiveCouponCard(coupon: state.coupons[index]),
+          );
+        }
+
+        return const Center(child: CircularProgressIndicator());
+      },
     );
   }
 }
@@ -398,7 +409,7 @@ class DealsTab extends StatelessWidget {
                     Text(
                       ['Weekend Sale', 'Bundle Deal', 'Student Offer', 'Members Only'][i],
                       style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.8),
+                        color: AppColors.white.withValues(alpha: 0.8),
                       ),
                     ),
                     Text(

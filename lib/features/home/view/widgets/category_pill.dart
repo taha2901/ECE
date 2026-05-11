@@ -26,10 +26,18 @@ class CategoryPillsRow extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(right: AppSpacing.pagePadding),
-            itemCount: state.categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemCount: state.categories.length + 1,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (_, i) {
-              final cat = state.categories[i];
+              if (i == 0) {
+                final isSelected = state.selectedId == 'all';
+                return _AllCategoryPill(
+                  isSelected: isSelected,
+                  onTap: () => context.read<CategoryCubit>().selectCategory('all'),
+                );
+              }
+
+              final cat = state.categories[i - 1];
               final isSelected = cat.id == state.selectedId;
 
               return _CategoryPillItem(
@@ -46,6 +54,70 @@ class CategoryPillsRow extends StatelessWidget {
   }
 }
 
+
+class _AllCategoryPill extends StatelessWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AllCategoryPill({
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected ? AppColors.accent : AppColors.textSecondary;
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 68,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: AppDurations.fast,
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.accent : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(
+                  color: isSelected ? AppColors.accent : Colors.transparent,
+                  width: 1.5,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accent.withAlpha((0.25 * 255).round()),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : AppColors.cardShadow,
+              ),
+              child: Icon(
+                Icons.grid_view_rounded,
+                size: 24,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              'All',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _CategoryPillItem extends StatelessWidget {
   final CategoryModel cat;
@@ -80,7 +152,7 @@ class _CategoryPillItem extends StatelessWidget {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: cat.activeColor.withOpacity(0.35),
+                          color: cat.activeColor.withAlpha((0.35 * 255).round()),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

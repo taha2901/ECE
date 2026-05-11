@@ -1,70 +1,93 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/auth/logic/cubit.dart';
+import 'package:real_ecommerce/features/auth/logic/states.dart';
 
 class HomeAppBarContent extends StatelessWidget {
   const HomeAppBarContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.network(
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
-            width: 42,
-            height: 42,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.person_rounded,
-                  color: AppColors.accent, size: 22),
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        final user = authState.authData?.user;
+        final name = user != null && user.firstName.isNotEmpty
+            ? '${user.firstName} ${user.lastName}'.trim()
+            : 'Guest User';
+        final subtitle = user != null ? 'Good morning 👋' : 'Welcome 👋';
+
+        return Row(
           children: [
-            Text(
-              'Good morning 👋',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textHint,
-                fontSize: 11,
-                letterSpacing: 0.2,
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+                boxShadow: AppColors.cardShadow,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _avatarInitials(name),
+                style: AppTypography.h3.copyWith(
+                  color: AppColors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            Text(
-              'Ahmed Hassan',
-              style: AppTypography.h3.copyWith(fontSize: 15),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    subtitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textHint,
+                      fontSize: 11,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  Text(
+                    name,
+                    style: AppTypography.h3.copyWith(fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _AppBarIconBtn(
+              icon: Icons.notifications_outlined,
+              badgeCount: 3,
+              onTap: () {},
+            ),
+            _AppBarIconBtn(
+              icon: Icons.shopping_bag_outlined,
+              badgeCount: 2,
+              onTap: () {},
             ),
           ],
-        ),
-        const Spacer(),
-        _AppBarIconBtn(
-          icon: Icons.notifications_outlined,
-          badgeCount: 3,
-          onTap: () {},
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        _AppBarIconBtn(
-          icon: Icons.shopping_bag_outlined,
-          badgeCount: 2,
-          onTap: () {},
-        ),
-      ],
+        );
+      },
     );
   }
-}
 
+  String _avatarInitials(String fullName) {
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+}
 
 class _AppBarIconBtn extends StatelessWidget {
   final IconData icon;

@@ -18,7 +18,8 @@ class ProductDetailMobile extends StatelessWidget {
   final List<String> galleryImages;
   final int selectedImage;
   final String selectedSize;
-  final String selectedColor;
+  final String selectedColorHex;
+  final String selectedColorName;
   final bool isWishlisted;
   final List<String> sizes;
   final TabController tabController;
@@ -34,7 +35,8 @@ class ProductDetailMobile extends StatelessWidget {
     required this.galleryImages,
     required this.selectedImage,
     required this.selectedSize,
-    required this.selectedColor,
+    required this.selectedColorHex,
+    required this.selectedColorName,
     required this.isWishlisted,
     required this.sizes,
     required this.tabController,
@@ -142,10 +144,10 @@ class ProductDetailMobile extends StatelessWidget {
                   AppSpacing.pagePadding,
                   0,
                 ),
-                child: _ProductInfo(
+                child: ProductInfoContent(
                   product: product,
                   selectedSize: selectedSize,
-                  selectedColor: selectedColor,
+                  selectedColorHex: selectedColorHex,
                   sizes: sizes,
                   tabController: tabController,
                   onSizeSelect: onSizeSelect,
@@ -157,9 +159,11 @@ class ProductDetailMobile extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: ProductBottomBar(
+        product: product,
         productId: product.id,
         selectedSize: selectedSize,
-        selectedColor: selectedColor,
+        selectedColorHex: selectedColorHex,
+        selectedColorName: selectedColorName,
       ),
     );
   }
@@ -170,7 +174,7 @@ class ProductDetailMobile extends StatelessWidget {
 class ProductInfoContent extends StatelessWidget {
   final ProductModel product;
   final String selectedSize;
-  final String selectedColor;
+  final String selectedColorHex;
   final List<String> sizes;
   final TabController tabController;
   final ValueChanged<String> onSizeSelect;
@@ -180,7 +184,7 @@ class ProductInfoContent extends StatelessWidget {
     super.key,
     required this.product,
     required this.selectedSize,
-    required this.selectedColor,
+    required this.selectedColorHex,
     required this.sizes,
     required this.tabController,
     required this.onSizeSelect,
@@ -221,7 +225,7 @@ class ProductInfoContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           ColorSelector(
             variants: product.variants,
-            selectedColor: selectedColor,
+            selectedColor: selectedColorHex,
             onSelect: onColorSelect,
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -275,6 +279,3 @@ class ProductInfoContent extends StatelessWidget {
     );
   }
 }
-
-// alias داخلي عشان الاستخدام في الـ SliverToBoxAdapter
-typedef _ProductInfo = ProductInfoContent;

@@ -1,8 +1,8 @@
-import 'package:latlong2/latlong.dart';
+﻿import 'package:latlong2/latlong.dart';
 
 class AddressModel {
   final String id;
-  final String label;      // "Home", "Work", etc.
+  final String label; // "Home", "Work", etc.
   final String fullAddress;
   final double latitude;
   final double longitude;
@@ -18,6 +18,28 @@ class AddressModel {
   });
 
   LatLng get latLng => LatLng(latitude, longitude);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'label': label,
+      'fullAddress': fullAddress,
+      'latitude': latitude,
+      'longitude': longitude,
+      'isDefault': isDefault ? 1 : 0,
+    };
+  }
+
+  factory AddressModel.fromMap(Map<String, dynamic> map) {
+    return AddressModel(
+      id: map['id'] as String,
+      label: map['label'] as String,
+      fullAddress: map['fullAddress'] as String,
+      latitude: (map['latitude'] as num).toDouble(),
+      longitude: (map['longitude'] as num).toDouble(),
+      isDefault: (map['isDefault'] as int) == 1,
+    );
+  }
 
   AddressModel copyWith({
     String? label,

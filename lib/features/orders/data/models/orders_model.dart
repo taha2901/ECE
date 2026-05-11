@@ -16,14 +16,31 @@ class OrdersListResponse {
   });
 
   factory OrdersListResponse.fromJson(Map<String, dynamic> json) {
+    final results = json['results'];
     return OrdersListResponse(
-      count: json['count'] as int? ?? 0,
-      next: json['next'] as String?,
-      previous: json['previous'] as String?,
-      results: (json['results'] as List<dynamic>?)
-              ?.map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      count: _parseInt(json['count']),
+      next: json['next']?.toString(),
+      previous: json['previous']?.toString(),
+      results: results is List
+          ? results
+              .map((e) => OrderModel.fromJson(
+                    Map<String, dynamic>.from(e as Map),
+                  ))
+              .toList()
+          : [],
+    );
+  }
+
+  factory OrdersListResponse.fromList(List<dynamic> jsonList) {
+    return OrdersListResponse(
+      count: jsonList.length,
+      next: null,
+      previous: null,
+      results: jsonList
+          .map((e) => OrderModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ))
+          .toList(),
     );
   }
 }
@@ -84,43 +101,31 @@ class OrderModel {
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    try {
-      return OrderModel(
-        id: json['id'] as int,
-        user: json['user'] as int,
-        customerName: json['customer_name'] as String? ?? '',
-        firstName: json['first_name'] as String? ?? '',
-        lastName: json['last_name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        phone: json['phone'] as String? ?? '',
-        address: json['address'] as String? ?? '',
-        city: json['city'] as String? ?? '',
-        zipCode: json['zip_code'] as String? ?? '',
-        subtotal: json['subtotal'] as String? ?? '0',
-        shippingFee: json['shipping_fee'] as String? ?? '0',
-        tax: json['tax'] as String? ?? '0',
-        total: json['total'] as String? ?? '0',
-        discountAmount: json['discount_amount'] as String? ?? '0',
-        coupon: json['coupon'] as String?,
-        status: json['status'] as String? ?? 'pending',
-        statusDisplay: json['status_display'] as String? ?? '',
-        paymentMethod: json['payment_method'] as String? ?? '',
-        paymentDisplay: json['payment_display'] as String? ?? '',
-        items: (json['items'] as List<dynamic>?)
-                ?.map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        createdAt: json['created_at'] != null
-            ? DateTime.parse(json['created_at'] as String)
-            : DateTime.now(),
-        updatedAt: json['updated_at'] != null
-            ? DateTime.parse(json['updated_at'] as String)
-            : DateTime.now(),
-      );
-    } catch (e) {
-      print('❌ Error parsing order: $e');
-      rethrow;
-    }
+    return OrderModel(
+      id: _parseInt(json['id']),
+      user: _parseInt(json['user']),
+      customerName: _parseString(json['customer_name']),
+      firstName: _parseString(json['first_name']),
+      lastName: _parseString(json['last_name']),
+      email: _parseString(json['email']),
+      phone: _parseString(json['phone']),
+      address: _parseString(json['address']),
+      city: _parseString(json['city']),
+      zipCode: _parseString(json['zip_code']),
+      subtotal: _parseString(json['subtotal'], '0'),
+      shippingFee: _parseString(json['shipping_fee'], '0'),
+      tax: _parseString(json['tax'], '0'),
+      total: _parseString(json['total'], '0'),
+      discountAmount: _parseString(json['discount_amount'], '0'),
+      coupon: json['coupon'] != null ? _parseString(json['coupon']) : null,
+      status: _parseString(json['status'], 'pending'),
+      statusDisplay: _parseString(json['status_display']),
+      paymentMethod: _parseString(json['payment_method']),
+      paymentDisplay: _parseString(json['payment_display']),
+      items: _parseOrderItems(json['items']),
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
+    );
   }
 
   // Getters for computed values
@@ -165,17 +170,62 @@ class OrderItemModel {
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     return OrderItemModel(
-      id: json['id'] as int,
-      product: json['product'] as int,
-      name: json['name'] as String? ?? '',
-      price: json['price'] as String? ?? '0',
-      quantity: json['quantity'] as int? ?? 1,
-      size: json['size'] as String? ?? '',
-      color: json['color'] as String? ?? '',
-      image: json['image'] as String? ?? '',
-      lineTotal: (json['line_total'] as num?)?.toDouble() ?? 0.0,
+      id: _parseInt(json['id']),
+      product: _parseInt(json['product']),
+      name: _parseString(json['name']),
+      price: _parseString(json['price'], '0'),
+      quantity: _parseInt(json['quantity'], 1),
+      size: _parseString(json['size']),
+      color: _parseString(json['color']),
+      image: _parseString(json['image']),
+      lineTotal: _parseDouble(json['line_total']),
     );
   }
 
   double get priceAsDouble => double.tryParse(price) ?? 0.0;
+}
+
+int _parseInt(dynamic value, [int defaultValue = 0]) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+String _parseString(dynamic value, [String defaultValue = '']) {
+  if (value == null) return defaultValue;
+  if (value is String) return value;
+  return value.toString();
+}
+
+double _parseDouble(dynamic value, [double defaultValue = 0.0]) {
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+DateTime _parseDateTime(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+  if (value is num) return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+  if (value is String) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) return parsed;
+    final millis = int.tryParse(value);
+    if (millis != null) return DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+  return DateTime.now();
+}
+
+List<OrderItemModel> _parseOrderItems(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => OrderItemModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
+        .toList();
+  }
+  return [];
 }

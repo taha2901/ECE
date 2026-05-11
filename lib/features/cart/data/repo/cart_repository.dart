@@ -5,7 +5,10 @@ import 'package:real_ecommerce/features/cart/data/models/cart_models.dart';
 
 class CartRepository {
   final Dio _dio;
-  static const String _baseUrl = 'https://midoghanam.pythonanywhere.com/api/cart/';
+  static const String _baseUrl =
+      'https://midoghanam.pythonanywhere.com/api/cart/';
+  static const String _clearUrl =
+      'https://midoghanam.pythonanywhere.com/api/cart/clear/';
 
   CartRepository(this._dio);
 
@@ -26,12 +29,10 @@ class CartRepository {
     AddToCartRequest request,
   ) async {
     try {
-      final response = await _dio.post(
-        _baseUrl,
-        data: request.toJson(),
-      );
+      final response = await _dio.post(_baseUrl, data: request.toJson());
       return ApiResult.success(
-        AddToCartResponseModel.fromJson(response.data as Map<String, dynamic>),
+        AddToCartResponseModel.fromJson(
+            response.data as Map<String, dynamic>),
       );
     } catch (e) {
       return ApiResult.failure(ErrorHandler.handle(e));
@@ -39,7 +40,7 @@ class CartRepository {
   }
 
   /// تحديث عنصر في العربة
-  Future<ApiResult<CartItemModel>> updateCartItem(
+  Future<ApiResult<void>> updateCartItem(
     int itemId,
     int quantity,
     String size,
@@ -48,21 +49,28 @@ class CartRepository {
     try {
       final response = await _dio.patch(
         '$_baseUrl$itemId/',
-        data: {
-          'quantity': quantity,
-          'size': size,
-          'color': color,
-        },
+        data: {'quantity': quantity, 'size': size, 'color': color},
       );
-      return ApiResult.success(
-        CartItemModel.fromJson(response.data as Map<String, dynamic>),
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return const ApiResult.success(null);
+      }
+
+      return ApiResult.failure(
+        ErrorHandler.handle(DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        )),
       );
     } catch (e) {
       return ApiResult.failure(ErrorHandler.handle(e));
     }
   }
 
-  /// حذف عنصر من العربة
+  /// حذف عنصر واحد من العربة  →  DELETE /cart/{id}/
   Future<ApiResult<void>> removeFromCart(int itemId) async {
     try {
       await _dio.delete('$_baseUrl$itemId/');
@@ -72,18 +80,10 @@ class CartRepository {
     }
   }
 
-  /// مسح العربة بالكامل
+  /// مسح العربة بالكامل  →  DELETE /cart/clear/
   Future<ApiResult<void>> clearCart() async {
     try {
-      final cart = await getCart();
-      await cart.when(
-        success: (data) async {
-          for (final item in data.results) {
-            await removeFromCart(item.id);
-          }
-        },
-        failure: (_) {},
-      );
+      await _dio.delete(_clearUrl);
       return const ApiResult.success(null);
     } catch (e) {
       return ApiResult.failure(ErrorHandler.handle(e));

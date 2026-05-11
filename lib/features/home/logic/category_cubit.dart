@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:real_ecommerce/core/network/api_result.dart';
 import 'package:real_ecommerce/features/home/data/models/category_model.dart';
 import 'package:real_ecommerce/features/home/data/repo/home_repository.dart';
 
@@ -62,7 +61,7 @@ class CategoryCubit extends Cubit<CategoryState> {
       success: (categories) {
         emit(CategoryLoaded(
           categories: categories,
-          selectedId: categories.isNotEmpty ? categories.first.id : 'all',
+          selectedId: 'all',
         ));
       },
       failure: (error) {

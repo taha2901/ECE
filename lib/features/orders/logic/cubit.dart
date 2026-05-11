@@ -30,6 +30,7 @@ class OrdersCubit extends Cubit<OrdersState> {
         },
         failure: (error) {
           print('❌ Error loading orders: ${error.apiErrorModel.readableMessage}');
+          print('❌ Error code: ${error.apiErrorModel.code}');
           emit(OrdersError(error.apiErrorModel.readableMessage));
         },
       );

@@ -22,14 +22,15 @@ class ShippingStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<CheckoutCubit, CheckoutState>(
       builder: (context, state) {
-        if (addressController.text.isEmpty && state.address != null) {
-          addressController.text = state.address!;
+        // ✅ تحديث الـ controllers إذا كانت فارغة والـ state لديه بيانات
+        if (addressController.text.isEmpty) {
+          addressController.text = state.address ?? '';
         }
-        if (cityController.text.isEmpty && state.city != null) {
-          cityController.text = state.city!;
+        if (cityController.text.isEmpty) {
+          cityController.text = state.city ?? '';
         }
-        if (zipCodeController.text.isEmpty && state.zipCode != null) {
-          zipCodeController.text = state.zipCode!;
+        if (zipCodeController.text.isEmpty) {
+          zipCodeController.text = state.zipCode ?? '';
         }
 
         return Column(
@@ -56,7 +57,7 @@ class ShippingStep extends StatelessWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: CheckoutTextField(
-                    label: 'Zip Code *',
+                    label: 'Zip Code',
                     controller: zipCodeController,
                     hint: 'Zip Code',
                     keyboardType: TextInputType.number,

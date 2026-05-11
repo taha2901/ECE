@@ -1,0 +1,198 @@
+{
+  "info": {
+    "_postman_id": "order-testing-collection",
+    "name": "Orders API - Create Order Examples",
+    "description": "مجموعة طلبات اختبار API إنشاء الطلبات",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "✅ مثال 1: طلب بسيط",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"محمود\",\n  \"last_name\": \"علي\",\n  \"phone\": \"201001234567\",\n  \"city\": \"الإسكندرية\",\n  \"payment_method\": \"deposit\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"name\": \"تي شيرت\",\n      \"price\": \"99.99\",\n      \"quantity\": 1,\n      \"size\": \"M\",\n      \"color\": \"أبيض\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/orders/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", ""]
+        }
+      }
+    },
+    {
+      "name": "✅ مثال 2: طلب متعدد مع بيانات كاملة",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"فاطمة\",\n  \"last_name\": \"إبراهيم\",\n  \"email\": \"fatima.ibrahim@example.com\",\n  \"phone\": \"201234567890\",\n  \"address\": \"شارع النيل، البناء الأول، الشقة 5\",\n  \"city\": \"القاهرة\",\n  \"zip_code\": \"11511\",\n  \"payment_method\": \"vodafone\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"name\": \"قميص كاجوال\",\n      \"price\": \"250.00\",\n      \"quantity\": 1,\n      \"size\": \"M\",\n      \"color\": \"أزرق\"\n    },\n    {\n      \"product_id\": 2,\n      \"name\": \"بنطال جينز\",\n      \"price\": \"350.00\",\n      \"quantity\": 1,\n      \"size\": \"30\",\n      \"color\": \"أسود\"\n    },\n    {\n      \"product_id\": 3,\n      \"name\": \"حذاء رياضي\",\n      \"price\": \"450.00\",\n      \"quantity\": 2,\n      \"size\": \"42\",\n      \"color\": \"أسود/أبيض\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/orders/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", ""]
+        }
+      }
+    },
+    {
+      "name": "✅ مثال 3: مع كود خصم + شحنة مخصصة",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"عمر\",\n  \"last_name\": \"خالد\",\n  \"email\": \"omar.khalid@example.com\",\n  \"phone\": \"01008888888\",\n  \"address\": \"مدينة نصر، برج النيل\",\n  \"city\": \"القاهرة\",\n  \"zip_code\": \"11371\",\n  \"payment_method\": \"bank\",\n  \"coupon_code\": \"SUMMER20\",\n  \"shipping_fee\": 75,\n  \"items\": [\n    {\n      \"product_id\": 5,\n      \"name\": \"فستان سهرة\",\n      \"price\": \"1500.00\",\n      \"quantity\": 1,\n      \"size\": \"S\",\n      \"color\": \"أحمر\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/orders/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", ""]
+        }
+      }
+    },
+    {
+      "name": "✅ مثال 4: طلب بشحن مجاني (> 1000 جنيه)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"سارة\",\n  \"last_name\": \"أحمد\",\n  \"phone\": \"201098765432\",\n  \"address\": \"التجمع الخامس\",\n  \"city\": \"القاهرة\",\n  \"payment_method\": \"card\",\n  \"items\": [\n    {\n      \"product_id\": 10,\n      \"name\": \"سترة براند\",\n      \"price\": \"600.00\",\n      \"quantity\": 2,\n      \"size\": \"M\",\n      \"color\": \"بيج\"\n    },\n    {\n      \"product_id\": 11,\n      \"name\": \"حزام جلد\",\n      \"price\": \"200.00\",\n      \"quantity\": 1,\n      \"size\": \"One Size\",\n      \"color\": \"بني\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/orders/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", ""]
+        }
+      }
+    },
+    {
+      "name": "📋 الحصول على جميع الطلبات (Admin Only)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_TOKEN_HERE"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8000/api/orders/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", ""]
+        }
+      }
+    },
+    {
+      "name": "📋 طلباتي (My Orders)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_TOKEN_HERE"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8000/api/orders/my/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", "my", ""]
+        }
+      }
+    },
+    {
+      "name": "🔍 الحصول على تفاصيل طلب معين",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_TOKEN_HERE"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8000/api/orders/42/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", "42", ""]
+        }
+      }
+    },
+    {
+      "name": "✏️ تحديث حالة الطلب",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_TOKEN_HERE"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"shipping\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/orders/42/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "orders", "42", ""]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

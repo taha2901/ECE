@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
@@ -242,10 +243,12 @@ class ProductCardGrid extends StatelessWidget {
                         onTap: () {
                           final isLoggedIn = context.read<AuthCubit>().state.isSuccess;
                           if (!isLoggedIn) {
-                            ScaffoldMessenger.of(context)
-                              ..clearSnackBars()
+                            appScaffoldMessengerKey.currentState
+                              ?..clearSnackBars()
                               ..showSnackBar(
                                 SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                                   content: const Text(
                                     'Please sign in to add items to your cart.',
                                   ),
@@ -266,8 +269,12 @@ class ProductCardGrid extends StatelessWidget {
                                 ? product.variants.first.colorHex
                                 : '#000000',
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Added to cart!')),
+                          appScaffoldMessengerKey.currentState?.showSnackBar(
+                            const SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              margin: EdgeInsets.fromLTRB(16, 0, 16, 96),
+                              content: Text('Added to cart!'),
+                            ),
                           );
                         },
                         child: Container(

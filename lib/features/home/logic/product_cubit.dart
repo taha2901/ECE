@@ -51,15 +51,9 @@ class ProductCubit extends Cubit<ProductState> {
     result.when(
       success: (data) {
         final products = data.results;
-        // عرض جميع المنتجات، أو أول النصف كـ featured والباقي كـ trending
-        final midpoint = (products.length / 2).ceil();
-        final featured = products.take(midpoint).toList();
-        final trending = products.skip(midpoint).toList();
-        
-        // Log للتتبع
-        print('✅ Products loaded: ${products.length} products');
-        print('Featured: ${featured.length}, Trending: ${trending.length}');
-        
+        final featured = products.where((p) => p.featured).toList();
+        final trending = products.where((p) => p.trending).toList();
+
         emit(ProductLoaded(
           products: products,
           featured: featured,
@@ -67,7 +61,6 @@ class ProductCubit extends Cubit<ProductState> {
         ));
       },
       failure: (error) {
-        print('❌ Error loading products: ${error.toString()}');
         emit(ProductError(error.apiErrorModel.readableMessage));
       },
     );

@@ -15,8 +15,10 @@ import 'package:real_ecommerce/features/onboarding/onboarding_screen.dart';
 import 'package:real_ecommerce/features/orders/view/orders_screen.dart';
 import 'package:real_ecommerce/features/cart/view/cart_screens.dart';
 import 'package:real_ecommerce/features/payment/view/payment_screen.dart';
+import 'package:real_ecommerce/features/payment/view/card_payment_screen.dart';
 import 'package:real_ecommerce/features/splash/splash_screen.dart';
 import 'package:real_ecommerce/features/profile/view/profile_screen.dart';
+import 'package:real_ecommerce/features/search/view/search_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Route Names ───────────────────────────────
@@ -28,6 +30,7 @@ abstract class AppRoutes {
   static const forgotPass = '/forgot-password';
   static const otp = '/otp';
   static const home = '/home';
+  static const search = '/search';
   static const categories = '/categories';
   static const orders = '/orders';
   static const offers = '/offers';
@@ -114,9 +117,10 @@ final appRouter = GoRouter(
     ),
 
     // ✅ الهوم (LayoutScreen) — متاح للجميع
+    GoRoute(path: AppRoutes.home, builder: (_, __) => const LayoutScreen()),
     GoRoute(
-      path: AppRoutes.home,
-      builder: (_, __) => const LayoutScreen(),
+      path: AppRoutes.payment,
+      builder: (_, __) => const CardPaymentScreen(),
     ),
 
     // Auth screens
@@ -155,7 +159,10 @@ final appRouter = GoRouter(
       builder: (_, __) => const AddressScreen(),
     ),
 
-    GoRoute(path: AppRoutes.payment, builder: (_, __) => const PaymentScreen()),
+    GoRoute(
+      path: AppRoutes.payment,
+      builder: (_, __) => const CardPaymentScreen(),
+    ),
 
     GoRoute(
       path: AppRoutes.paymentSuccess,
@@ -164,15 +171,11 @@ final appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.productDetail,
-      builder: (_, state) => ProductDetailScreen(
-        product: state.extra as dynamic,
-      ),
+      builder: (_, state) =>
+          ProductDetailScreen(product: state.extra as dynamic),
     ),
 
-    GoRoute(
-      path: AppRoutes.cart,
-      builder: (_, __) => const CartScreen(),
-    ),
+    GoRoute(path: AppRoutes.cart, builder: (_, __) => const CartScreen()),
 
     GoRoute(
       path: AppRoutes.notifications,
@@ -185,9 +188,11 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: AppRoutes.profile,
-      builder: (_, __) => const ProfileScreen(),
+      path: AppRoutes.search,
+      builder: (_, __) => const SearchScreen(),
     ),
+
+    GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
 
     GoRoute(
       path: AppRoutes.adminDashboard,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 import '../constants/app_constants.dart';
@@ -134,6 +135,8 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final TextEditingController? controller;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
+  final bool onlyDigits;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final int maxLines;
@@ -147,6 +150,8 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.controller,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.onlyDigits = false,
     this.validator,
     this.onChanged,
     this.maxLines = 1,
@@ -165,6 +170,18 @@ class AppTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          textInputAction: textInputAction ??
+              (maxLines > 1 ? TextInputAction.newline : TextInputAction.next),
+          inputFormatters: (onlyDigits || keyboardType == TextInputType.number)
+              ? [FilteringTextInputFormatter.digitsOnly]
+              : null,
+          onFieldSubmitted: (_) {
+            final action = textInputAction ??
+                (maxLines > 1 ? TextInputAction.newline : TextInputAction.next);
+            if (action == TextInputAction.next) {
+              FocusScope.of(context).nextFocus();
+            }
+          },
           validator: validator,
           onChanged: onChanged,
           maxLines: maxLines,
@@ -243,7 +260,7 @@ class AppBadge extends StatelessWidget {
         vertical: isSmall ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.accent.withOpacity(0.12),
+        color: backgroundColor ?? AppColors.accent.withAlpha((0.12 * 255).round()),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(

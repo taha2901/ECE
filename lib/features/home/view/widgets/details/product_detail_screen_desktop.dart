@@ -23,7 +23,8 @@ class ProductDetailDesktop extends StatelessWidget {
   final List<String> galleryImages;
   final int selectedImage;
   final String selectedSize;
-  final String selectedColor;
+  final String selectedColorHex;
+  final String selectedColorName;
   final bool isWishlisted;
   final List<String> sizes;
   final TabController tabController;
@@ -39,7 +40,8 @@ class ProductDetailDesktop extends StatelessWidget {
     required this.galleryImages,
     required this.selectedImage,
     required this.selectedSize,
-    required this.selectedColor,
+    required this.selectedColorHex,
+    required this.selectedColorName,
     required this.isWishlisted,
     required this.sizes,
     required this.tabController,
@@ -107,7 +109,7 @@ class ProductDetailDesktop extends StatelessWidget {
                           child: ProductInfoContent(
                             product: product,
                             selectedSize: selectedSize,
-                            selectedColor: selectedColor,
+                            selectedColorHex: selectedColorHex,
                             sizes: sizes,
                             tabController: tabController,
                             onSizeSelect: onSizeSelect,
@@ -124,9 +126,11 @@ class ProductDetailDesktop extends StatelessWidget {
 
           // ── Bottom Bar ────────────────────────────────
           ProductBottomBar(
+            product: product,
             productId: product.id,
             selectedSize: selectedSize,
-            selectedColor: selectedColor,
+            selectedColorHex: selectedColorHex,
+            selectedColorName: selectedColorName,
           ),
         ],
       ),

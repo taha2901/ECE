@@ -34,6 +34,8 @@ class CartCubit extends Cubit<CartState> {
   
 
   /// إضافة منتج للعربة
+  /// إذا كان المنتج موجود بنفس (size, color) → زيادة الكمية
+  /// وإلا → إضافة عنصر جديد
   Future<void> addToCart({
     required int productId,
     required int quantity,
@@ -42,6 +44,31 @@ class CartCubit extends Cubit<CartState> {
   }) async {
     emit(state.copyWith(status: CartStatus.adding));
 
+    // ✅ البحث عن عنصر موجود بنفس (productId, size, color)
+    final normalizedSize = size.trim().toLowerCase();
+    final normalizedColor = color.trim().toLowerCase();
+
+    CartItemModel? existingItem;
+    try {
+      existingItem = state.items.firstWhere(
+        (item) =>
+            item.product.id == productId &&
+            item.size.trim().toLowerCase() == normalizedSize &&
+            item.color.trim().toLowerCase() == normalizedColor,
+      );
+    } catch (_) {
+      // العنصر غير موجود
+      existingItem = null;
+    }
+
+    if (existingItem != null) {
+      // ✅ العنصر موجود → زيادة الكمية فقط
+      final newQuantity = existingItem.quantity + quantity;
+      await updateCartItem(existingItem.id, newQuantity, size, color);
+      return;
+    }
+
+    // ❌ العنصر غير موجود → إضافة جديد
     final result = await _repository.addToCart(
       AddToCartRequest(
         productId: productId,
@@ -82,7 +109,6 @@ class CartCubit extends Cubit<CartState> {
 
     // احفظ القيمة القديمة عشان نرجع إليها لو فشل التحديث
     final oldItem = state.items[itemIndex];
-    final oldQuantity = oldItem.quantity;
 
     // تحديث optimistic: غير الكمية مباشرة بدون انتظار السيرفر
     final updatedItems = List<CartItemModel>.from(state.items);

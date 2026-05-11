@@ -27,6 +27,7 @@ class CheckoutState {
   final String? paymentMethod; // 'deposit' or other methods
   final double? shippingFee;
   final double? tax;
+  final String? coupon;
 
   const CheckoutState({
     this.status = CheckoutStatus.initial,
@@ -44,6 +45,7 @@ class CheckoutState {
     this.paymentMethod,
     this.shippingFee,
     this.tax,
+    this.coupon,
   });
 
   CheckoutState copyWith({
@@ -62,6 +64,7 @@ class CheckoutState {
     String? paymentMethod,
     double? shippingFee,
     double? tax,
+    String? coupon,
   }) {
     return CheckoutState(
       status: status ?? this.status,
@@ -79,6 +82,7 @@ class CheckoutState {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       shippingFee: shippingFee ?? this.shippingFee,
       tax: tax ?? this.tax,
+      coupon: coupon ?? this.coupon,
     );
   }
 }

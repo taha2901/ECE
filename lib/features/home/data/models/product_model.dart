@@ -111,7 +111,7 @@ class ProductModel {
 
   List<String> get availableColors {
     try {
-      return variants.map((v) => v.color).toList();
+      return variants.where((v) => v.totalStock > 0).map((v) => v.color).toList();
     } catch (e) {
       print('Error getting availableColors: $e');
       return [];
@@ -121,13 +121,44 @@ class ProductModel {
   List<String> get availableSizes {
     try {
       return variants
-          .expand((v) => v.sizes.map((s) => s.size))
+          .expand((v) => v.sizes.where((s) => s.quantity > 0).map((s) => s.size))
           .toSet()
           .toList();
     } catch (e) {
       print('Error getting availableSizes: $e');
       return [];
     }
+  }
+
+  VariantModel? variantForColorHex(String colorHex) {
+    try {
+      return variants.firstWhere(
+        (v) => v.colorHex.toLowerCase() == colorHex.trim().toLowerCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  SizeModel? sizeForVariant(String colorHex, String size) {
+    final variant = variantForColorHex(colorHex);
+    if (variant == null) return null;
+    try {
+      return variant.sizes.firstWhere(
+        (s) => s.size.toLowerCase() == size.trim().toLowerCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool isVariantAvailable(String colorHex, String size) {
+    final selectedSize = sizeForVariant(colorHex, size);
+    return selectedSize != null && selectedSize.quantity > 0;
+  }
+
+  int availableQuantity(String colorHex, String size) {
+    return sizeForVariant(colorHex, size)?.quantity ?? 0;
   }
 }
 

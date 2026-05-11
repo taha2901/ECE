@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:real_ecommerce/core/network/api_result.dart';
 import 'package:real_ecommerce/core/network/api_error_handler.dart';
 import 'package:real_ecommerce/core/network/api_services.dart';
@@ -12,7 +13,13 @@ class OrdersRepository {
   Future<ApiResult<OrdersListResponse>> getOrders({int page = 1}) async {
     try {
       final response = await _apiService.getOrders();
-      print('📦 Orders API Response: ${response.data.runtimeType}');
+
+      if (response.data is List) {
+        final ordersResponse = OrdersListResponse.fromList(
+          List<dynamic>.from(response.data as List<dynamic>),
+        );
+        return ApiResult.success(ordersResponse);
+      }
 
       Map<String, dynamic> data;
       if (response.data is Map) {
@@ -22,10 +29,10 @@ class OrdersRepository {
       }
 
       final ordersResponse = OrdersListResponse.fromJson(data);
-      print('✅ Parsed orders: ${ordersResponse.results.length}');
       return ApiResult.success(ordersResponse);
-    } catch (error) {
-      print('❌ Error fetching orders: $error');
+    } catch (error, stackTrace) {
+      debugPrint('❌ OrdersRepository.getOrders error: $error');
+      debugPrint('❌ OrdersRepository.getOrders stackTrace: $stackTrace');
       return ApiResult.failure(ErrorHandler.handle(error));
     }
   }
@@ -34,7 +41,6 @@ class OrdersRepository {
   Future<ApiResult<OrderModel>> getOrderDetails(int orderId) async {
     try {
       final response = await _apiService.getOrderDetails(orderId);
-      print('📦 Order Details API Response: ${response.data.runtimeType}');
 
       Map<String, dynamic> data;
       if (response.data is Map) {
@@ -44,10 +50,8 @@ class OrdersRepository {
       }
 
       final order = OrderModel.fromJson(data);
-      print('✅ Parsed order details: Order #${order.id}');
       return ApiResult.success(order);
     } catch (error) {
-      print('❌ Error fetching order details: $error');
       return ApiResult.failure(ErrorHandler.handle(error));
     }
   }
@@ -61,13 +65,11 @@ class OrdersRepository {
           final filtered = response.results
               .where((order) => order.status == status)
               .toList();
-          print('✅ Filtered orders by status "$status": ${filtered.length}');
           return ApiResult.success(filtered);
         },
         failure: (error) => ApiResult.failure(error),
       );
     } catch (error) {
-      print('❌ Error filtering orders: $error');
       return ApiResult.failure(ErrorHandler.handle(error));
     }
   }

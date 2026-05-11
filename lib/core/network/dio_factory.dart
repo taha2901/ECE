@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:real_ecommerce/core/helpers/constants.dart';
 import 'package:real_ecommerce/core/helpers/shared_pref_helper.dart';
 import 'package:real_ecommerce/core/network/api_constants.dart';
@@ -58,6 +59,12 @@ class DioFactory {
           String accessToken =
               await SharedPrefHelper.getSecuredString(SharedPrefKeys.userToken);
 
+          // ✅ fallback في حالة secure storage مش متاحة أو فاضية
+          if (accessToken.isEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            accessToken = prefs.getString('auth_token') ?? '';
+          }
+
           // لو مفيش توكن: ده طبيعي (قبل login) → سيب الريكويست يكمل
           if (accessToken.isEmpty) {
             return handler.next(options);
@@ -65,9 +72,13 @@ class DioFactory {
 
           // ✅ لو access انتهى -> refresh
           if (_isTokenExpired(accessToken)) {
-            final refreshToken = await SharedPrefHelper.getSecuredString(
+            String refreshToken = await SharedPrefHelper.getSecuredString(
               SharedPrefKeys.refreshToken,
             );
+            if (refreshToken.isEmpty) {
+              final prefs = await SharedPreferences.getInstance();
+              refreshToken = prefs.getString('auth_refresh_token') ?? '';
+            }
 
             if (refreshToken.isEmpty) {
               await _logoutAll();
@@ -180,10 +191,7 @@ class DioFactory {
       if (token.isEmpty || token.split('.').length != 3) return true;
 
       final expiryDate = JwtDecoder.getExpirationDate(token);
-      final now = DateTime.now();
-
-      const buffer = Duration(minutes: 1);
-      return expiryDate.subtract(buffer).isBefore(now);
+      return expiryDate.isBefore(DateTime.now());
     } catch (_) {
       return true;
     }
@@ -205,6 +213,7 @@ class DioFactory {
         ApiConstants.refreshToken,
         data: {"refresh": refreshToken},
       );
+      debugPrint('DioFactory: refresh token response status=${response.statusCode} data=${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -232,7 +241,9 @@ class DioFactory {
       }
 
       return false;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('DioFactory: refresh token failed: $error');
+      debugPrint('$stackTrace');
       return false;
     }
   }
@@ -265,15 +276,35 @@ class DioFactory {
 
   static Future<void> _logoutAll() async {
     await SharedPrefHelper.clearAllSecuredData();
+    await _clearLocalAuthPrefs();
     _queuedRequests.clear();
     _isRefreshing = false;
+    dio?.options.headers.remove('Authorization');
 
     if (navigatorKey.currentState != null) {
+      // يمكن تفعيل التوجيه التلقائي إلى شاشة الدخول إذا أردت.
       // navigatorKey.currentState!.pushNamedAndRemoveUntil(
       //   Routers.login,
       //   (route) => false,
       // );
     }
+  }
+
+  static Future<void> _clearLocalAuthPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('auth_refresh_token');
+    await prefs.remove('user_id');
+    await prefs.remove('username');
+    await prefs.remove('email');
+    await prefs.remove('first_name');
+    await prefs.remove('last_name');
+    await prefs.remove('phone');
+    await prefs.remove('address');
+    await prefs.remove('city');
+    await prefs.remove('country');
+    await prefs.remove('is_admin');
+    await prefs.remove('is_staff');
   }
 
   static void clearToken() {

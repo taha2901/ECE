@@ -43,7 +43,7 @@ class _CartTotalScreenState extends State<CartTotalScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.home),
         ),
       ),
       body: BlocBuilder<CheckoutCubit, CheckoutState>(

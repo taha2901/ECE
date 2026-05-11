@@ -7,17 +7,22 @@ import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart';
+import 'package:real_ecommerce/features/home/data/models/product_model.dart';
 
 class ProductBottomBar extends StatefulWidget {
+  final ProductModel product;
   final int productId;
   final String selectedSize;
-  final String selectedColor;
+  final String selectedColorHex;
+  final String selectedColorName;
 
   const ProductBottomBar({
     super.key,
+    required this.product,
     required this.productId,
     required this.selectedSize,
-    required this.selectedColor,
+    required this.selectedColorHex,
+    required this.selectedColorName,
   });
 
   @override
@@ -26,6 +31,19 @@ class ProductBottomBar extends StatefulWidget {
 
 class _ProductBottomBarState extends State<ProductBottomBar> {
   int _qty = 1;
+
+  bool get _isSelectedVariantAvailable {
+    return widget.product.isVariantAvailable(
+      widget.selectedColorHex,
+      widget.selectedSize,
+    );
+  }
+
+  String get _selectedColorLabel {
+    return widget.selectedColorName.isNotEmpty
+        ? widget.selectedColorName
+        : widget.selectedColorHex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +83,9 @@ class _ProductBottomBarState extends State<ProductBottomBar> {
           // Add to Cart
           Expanded(
             child: GestureDetector(
-              onTap: _handleAddToCart,
+              onTap: _isSelectedVariantAvailable
+                  ? _handleAddToCart
+                  : _showOutOfStockMessage,
               child: Container(
                 height: 54,
                 decoration: BoxDecoration(
@@ -80,7 +100,9 @@ class _ProductBottomBarState extends State<ProductBottomBar> {
                         color: Colors.white, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      AppStrings.addToCart,
+                      _isSelectedVariantAvailable
+                          ? AppStrings.addToCart
+                          : 'Out of stock',
                       style: AppTypography.buttonLarge
                           .copyWith(color: AppColors.white),
                     ),
@@ -97,10 +119,12 @@ class _ProductBottomBarState extends State<ProductBottomBar> {
   void _handleAddToCart() {
     final isLoggedIn = context.read<AuthCubit>().state.isSuccess;
     if (!isLoggedIn) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
+      appScaffoldMessengerKey.currentState
+        ?..clearSnackBars()
         ..showSnackBar(
           SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 96),
             content: const Text('Please sign in to add items to your cart.'),
             action: SnackBarAction(
               label: 'Sign In',
@@ -115,11 +139,20 @@ class _ProductBottomBarState extends State<ProductBottomBar> {
           productId: widget.productId,
           quantity: _qty,
           size: widget.selectedSize,
-          color: widget.selectedColor,
+          color: _selectedColorLabel,
         );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Added to cart!')),
-    );
+  }
+
+  void _showOutOfStockMessage() {
+    appScaffoldMessengerKey.currentState
+      ?..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 96),
+          content: Text('This selection is out of stock.'),
+        ),
+      );
   }
 }
 

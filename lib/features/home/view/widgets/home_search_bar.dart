@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
+import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 
@@ -9,7 +11,7 @@ class HomeSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.search),
       child: Container(
         height: 52,
         decoration: BoxDecoration(

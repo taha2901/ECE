@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
@@ -7,7 +8,9 @@ import 'package:real_ecommerce/features/orders/data/models/orders_model.dart';
 import 'package:real_ecommerce/features/orders/logic/cubit.dart';
 import 'package:real_ecommerce/features/orders/logic/states.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/routers/app_router.dart';
 import '../../../core/widgets/common_widgets.dart';
+import '../../../features/auth/logic/cubit.dart';
 
 // ═══════════════════════════════════════════════
 // ORDERS SCREEN
@@ -30,8 +33,10 @@ class _OrdersScreenState extends State<OrdersScreen>
     _tabController = TabController(length: 4, vsync: this);
     _ordersCubit = context.read<OrdersCubit>();
     
-    // Load orders on init
-    _ordersCubit.loadOrders();
+    // Check authentication before loading orders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthenticationAndLoadOrders();
+    });
     
     // Listen to tab changes
     _tabController.addListener(() {
@@ -39,6 +44,18 @@ class _OrdersScreenState extends State<OrdersScreen>
         _onTabChanged(_tabController.index);
       }
     });
+  }
+
+  void _checkAuthenticationAndLoadOrders() {
+    final isLoggedIn = context.read<AuthCubit>().state.isSuccess;
+    if (!isLoggedIn) {
+      // Redirect to login if not authenticated
+      context.go(AppRoutes.login);
+      return;
+    }
+    
+    // Load orders if authenticated
+    _ordersCubit.loadOrders();
   }
 
   void _onTabChanged(int index) {

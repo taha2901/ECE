@@ -1,5 +1,6 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:real_ecommerce/features/address/data/models/address_model.dart';
+import 'package:real_ecommerce/features/address/data/repo/address_repository.dart';
 
 // ── States ──────────────────────────────────────
 class AddressState {
@@ -24,31 +25,35 @@ class AddressState {
 
 // ── Cubit ────────────────────────────────────────
 class AddressCubit extends Cubit<AddressState> {
-  AddressCubit() : super(const AddressState());
+  final AddressRepository _repository;
 
-  void addAddress(AddressModel address) {
-    final updated = List<AddressModel>.from(state.addresses);
-
-    // لو هو default، شيل الـ default من الباقيين
-    if (address.isDefault) {
-      for (int i = 0; i < updated.length; i++) {
-        updated[i] = updated[i].copyWith(isDefault: false);
-      }
-    }
-
-    updated.add(address);
-    emit(state.copyWith(addresses: updated));
+  AddressCubit(this._repository) : super(const AddressState()) {
+    loadAddresses();
   }
 
-  void removeAddress(String id) {
-    final updated = state.addresses.where((a) => a.id != id).toList();
-    emit(state.copyWith(addresses: updated));
+  Future<void> loadAddresses() async {
+    emit(state.copyWith(isLoading: true));
+    final saved = await _repository.getAddresses();
+    emit(state.copyWith(addresses: saved, isLoading: false));
   }
 
-  void setDefault(String id) {
-    final updated = state.addresses.map((a) {
-      return a.copyWith(isDefault: a.id == id);
-    }).toList();
-    emit(state.copyWith(addresses: updated));
+  Future<void> addAddress(AddressModel address) async {
+    await _repository.addAddress(address);
+    await loadAddresses();
+  }
+
+  Future<void> updateAddress(AddressModel address) async {
+    await _repository.updateAddress(address);
+    await loadAddresses();
+  }
+
+  Future<void> removeAddress(String id) async {
+    await _repository.deleteAddress(id);
+    await loadAddresses();
+  }
+
+  Future<void> setDefault(String id) async {
+    await _repository.setDefaultAddress(id);
+    await loadAddresses();
   }
 }

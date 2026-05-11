@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
+import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
+import 'package:real_ecommerce/features/checkout/logic/checkout_state.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/common_widgets.dart';
 
@@ -27,9 +30,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // إغلق الكيبوردة عند دخول صفحة الدفع
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text('Payment')),
       body: Column(
         children: [
@@ -41,9 +54,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 children: [
                   Text('Payment Method', style: AppTypography.h2),
                   const SizedBox(height: AppSpacing.xl),
+
                   ...List.generate(_methods.length, (i) {
                     final m = _methods[i];
                     final isSelected = i == _selectedMethod;
+
                     return GestureDetector(
                       onTap: () => setState(() => _selectedMethod = i),
                       child: AnimatedContainer(
@@ -88,24 +103,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                     );
                   }),
+
+                  // Card form
                   if (_selectedMethod == 0) ...[
                     const SizedBox(height: AppSpacing.xxl),
                     Text('Card Details', style: AppTypography.h2),
                     const SizedBox(height: AppSpacing.xl),
                     const CreditCardVisual(),
                     const SizedBox(height: AppSpacing.xxl),
+
                     const AppTextField(
                       label: 'Card Number',
                       hint: '0000  0000  0000  0000',
                       prefixIcon: Icons.credit_card_rounded,
                     ),
                     const SizedBox(height: AppSpacing.xl),
+
                     const AppTextField(
                       label: 'Card Holder',
                       hint: 'Name on card',
                       prefixIcon: Icons.person_outline_rounded,
                     ),
                     const SizedBox(height: AppSpacing.xl),
+
                     Row(
                       children: const [
                         Expanded(
@@ -126,11 +146,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ],
                     ),
                   ],
+
                   const SizedBox(height: AppSpacing.huge),
                 ],
               ),
             ),
           ),
+
+          // Bottom bar
           Container(
             padding: const EdgeInsets.all(AppSpacing.pagePadding),
             color: AppColors.white,
@@ -144,6 +167,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
+
                 GradientButton(
                   label: 'Pay Now',
                   onTap: () {
@@ -214,9 +238,8 @@ class CreditCardVisual extends StatelessWidget {
                   ),
                   Text(
                     'Ahmed Mohamed',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.white,
-                    ),
+                    style: AppTypography.labelMedium
+                        .copyWith(color: AppColors.white),
                   ),
                 ],
               ),
@@ -232,18 +255,15 @@ class CreditCardVisual extends StatelessWidget {
                   ),
                   Text(
                     '09 / 27',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.white,
-                    ),
+                    style: AppTypography.labelMedium
+                        .copyWith(color: AppColors.white),
                   ),
                 ],
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -269,70 +289,149 @@ class PaymentSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.pagePadding),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  size: 64,
-                  color: AppColors.success,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              Text('Order Placed! 🎉', style: AppTypography.displayMedium),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Your order #ORD-2025-0042 has been confirmed.\nExpected delivery in 3-5 business days.',
-                style: AppTypography.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xxxl),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return BlocBuilder<CheckoutCubit, CheckoutState>(
+      builder: (context, checkoutState) {
+        if (checkoutState.status == CheckoutStatus.error) {
+          return Scaffold(
+            backgroundColor: AppColors.white,
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _OrderInfoItem(label: 'Order ID', value: '#0042'),
-                    _OrderInfoItem(label: 'Amount', value: '\$409.96'),
-                    _OrderInfoItem(label: 'Delivery', value: '3-5 Days'),
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.error_rounded,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text('Order Failed', style: AppTypography.displayMedium),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      checkoutState.errorMessage ?? 'Failed to create order.',
+                      style: AppTypography.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    GradientButton(
+                      label: 'Try Again',
+                      onTap: () {
+                        context.go(AppRoutes.enhancedCheckout);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      label: 'Contact Support',
+                      isOutlined: true,
+                      onTap: () {
+                        // contact support
+                      },
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxxl),
-              GradientButton(
-                label: 'Track My Order',
-                onTap: () {
-                  context.go(AppRoutes.orders);
-                },
+            ),
+          );
+        }
+        final order = checkoutState.createdOrder;
+
+        // إغلق الكيبوردة عند صفحة النجاح
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          FocusScope.of(context).unfocus();
+        });
+
+        return Scaffold(
+          backgroundColor: AppColors.white,
+          resizeToAvoidBottomInset: false,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.pagePadding),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      size: 64,
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  Text('Order Placed! 🎉',
+                      style: AppTypography.displayMedium),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    order != null
+                        ? 'Your order #${order.id} has been confirmed.\nExpected delivery in 3-5 business days.'
+                        : 'Your order has been confirmed.\nExpected delivery in 3-5 business days.',
+                    style: AppTypography.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xxxl),
+
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _OrderInfoItem(
+                          label: 'Order ID',
+                          value: order != null ? '#${order.id}' : '#0042',
+                        ),
+                        _OrderInfoItem(
+                          label: 'Amount',
+                          value:
+                              '\$${checkoutState.cartTotal?.total ?? '409.96'}',
+                        ),
+                        const _OrderInfoItem(
+                          label: 'Delivery',
+                          value: '3-5 Days',
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xxxl),
+
+                  GradientButton(
+                    label: 'Track My Order',
+                    onTap: () {
+                      context.go(AppRoutes.orders);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppButton(
+                    label: 'Continue Shopping',
+                    isOutlined: true,
+                    onTap: () {
+                      context.go(AppRoutes.home);
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                label: 'Continue Shopping',
-                isOutlined: true,
-                onTap: () {
-                  context.go(AppRoutes.home);
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -341,7 +440,10 @@ class _OrderInfoItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _OrderInfoItem({required this.label, required this.value});
+  const _OrderInfoItem({
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
