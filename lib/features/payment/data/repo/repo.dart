@@ -1,13 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PaymentRepository {
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://api.stripe.com/v1/',
-    headers: {
-      'Authorization': 'Bearer REDACTED', // ← هنا
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  ));
+  PaymentRepository()
+      : _dio = Dio(BaseOptions(
+          baseUrl: 'https://api.stripe.com/v1/',
+          headers: {
+            'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET_KEY'] ?? ''}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        )) {
+    final secretKey = dotenv.env['STRIPE_SECRET_KEY'];
+    if (secretKey == null || secretKey.isEmpty) {
+      throw StateError('Missing STRIPE_SECRET_KEY in .env');
+    }
+  }
+
+  final Dio _dio;
 
   Future<String> createPaymentIntent({
     required int amountInCents, // 1000 = $10.00

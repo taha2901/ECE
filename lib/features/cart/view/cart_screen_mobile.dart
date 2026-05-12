@@ -88,6 +88,7 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
                     ),
                     backgroundColor: AppColors.error,
                     behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -109,6 +110,7 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
                     ),
                     backgroundColor: Colors.green.shade600,
                     behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

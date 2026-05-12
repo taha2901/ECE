@@ -24,6 +24,7 @@ dependencies:
   equatable: ^2.0.8
   get_it: ^8.1.0
   intl: ^0.18.1
+  flutter_dotenv: ^6.0.1
   persistent_bottom_nav_bar: ^6.2.1
   shared_preferences: ^2.2.2
   cached_network_image: ^3.4.1
@@ -49,6 +50,7 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
+    - .env
 
 # ──────────────────────────────────────────────
 # App Launcher Icon

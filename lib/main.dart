@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/di/service_locator.dart';
@@ -20,7 +21,14 @@ import 'package:real_ecommerce/features/search/logic/search_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = 'pk_test_51Q4r3VIoXuYanf6KSRtJOXZQ9zkZThGIstp2EtKzxsyv517nZDo6r7yl9RTWUvGqXW6vPLkMIASAydtR32J69ILe00e596uuyM'; // ← ضيف مفتاحك هنا
+  await dotenv.load(fileName: '.env');
+
+  final stripePublishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'];
+  if (stripePublishableKey == null || stripePublishableKey.isEmpty) {
+    throw StateError('Missing STRIPE_PUBLISHABLE_KEY in .env');
+  }
+
+  Stripe.publishableKey = stripePublishableKey;
   await Stripe.instance.applySettings();
   await initDependencies();
   await LocationService().requestLocationPermission();
