@@ -75,8 +75,8 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
             listener: (context, state) {
               if (state.errorMessage != null &&
                   state.status == CartStatus.loaded) {
-                ScaffoldMessenger.of(context)
-                  ..clearSnackBars()
+                appScaffoldMessengerKey.currentState
+                  ?..clearSnackBars()
                   ..showSnackBar(SnackBar(
                     content: Row(
                       children: [
@@ -97,8 +97,8 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
               }
               if (state.status == CartStatus.loaded &&
                   state.message == 'Cart cleared') {
-                ScaffoldMessenger.of(context)
-                  ..clearSnackBars()
+                appScaffoldMessengerKey.currentState
+                  ?..clearSnackBars()
                   ..showSnackBar(SnackBar(
                     content: const Row(
                       children: [
