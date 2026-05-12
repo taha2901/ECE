@@ -32,6 +32,17 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final details = <Widget>[];
+    if (username != null && username!.isNotEmpty) {
+      details.add(_infoChip(Icons.person_outline, username!));
+    }
+    if (phone.isNotEmpty) {
+      details.add(_infoChip(Icons.phone_outlined, phone));
+    }
+    if (location.isNotEmpty) {
+      details.add(_infoChip(Icons.location_on_outlined, location));
+    }
+
     return Column(
       children: [
         Container(
@@ -50,20 +61,39 @@ class ProfileAvatar extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(displayName, style: AppTypography.h2),
-        Text(subtitle, style: AppTypography.bodyMedium),
-        if (username != null && username!.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text('Username: $username', style: AppTypography.bodySmall),
-        ],
-        if (phone.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text('Phone: $phone', style: AppTypography.bodySmall),
-        ],
-        if (location.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(location, style: AppTypography.bodySmall),
+        const SizedBox(height: AppSpacing.xs),
+        Text(subtitle, style: AppTypography.bodyMedium.copyWith(color: AppColors.textHint)),
+        if (details.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            alignment: WrapAlignment.center,
+            children: details,
+          ),
         ],
       ],
+    );
+  }
+
+  Widget _infoChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.textHint),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            text,
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
+          ),
+        ],
+      ),
     );
   }
 }

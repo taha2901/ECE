@@ -9,9 +9,9 @@ class HomeRepository {
 
   HomeRepository(this._apiService);
 
-  Future<ApiResult<ProductResponseModel>> getProducts({int page = 1}) async {
+  Future<ApiResult<ProductResponseModel>> getProducts({int page = 1, String? search}) async {
     try {
-      final response = await _apiService.getProducts(page: page);
+      final response = await _apiService.getProducts(page: page, search: search);
       print('📦 Raw API Response: ${response.data.runtimeType}');
       print('📦 API Response keys: ${response.data is Map ? (response.data as Map).keys : 'not a map'}');
       

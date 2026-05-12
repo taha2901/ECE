@@ -1,10 +1,14 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
 import 'package:real_ecommerce/features/auth/logic/states.dart';
+import 'package:real_ecommerce/features/cart/logic/cubit.dart';
+import 'package:real_ecommerce/features/cart/logic/states.dart';
+import 'package:real_ecommerce/core/routers/app_router.dart';
 
 class HomeAppBarContent extends StatelessWidget {
   const HomeAppBarContent({super.key});
@@ -18,6 +22,8 @@ class HomeAppBarContent extends StatelessWidget {
             ? '${user.firstName} ${user.lastName}'.trim()
             : 'Guest User';
         final subtitle = user != null ? 'Good morning 👋' : 'Welcome 👋';
+
+        final isLoggedIn = authState.status == AuthStatus.success;
 
         return Row(
           children: [
@@ -61,16 +67,16 @@ class HomeAppBarContent extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            _AppBarIconBtn(
-              icon: Icons.notifications_outlined,
-              badgeCount: 3,
-              onTap: () {},
-            ),
-            _AppBarIconBtn(
-              icon: Icons.shopping_bag_outlined,
-              badgeCount: 2,
-              onTap: () {},
-            ),
+            if (isLoggedIn)
+              BlocBuilder<CartCubit, CartState>(
+                builder: (context, cartState) {
+                  return _AppBarIconBtn(
+                    icon: Icons.shopping_cart_outlined,
+                    badgeCount: cartState.totalItems,
+                    onTap: () => context.go(AppRoutes.cart),
+                  );
+                },
+              ),
           ],
         );
       },

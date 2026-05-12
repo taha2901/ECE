@@ -25,9 +25,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SearchCubit>().loadProducts();
-    });
   }
 
   @override
@@ -91,13 +88,45 @@ class _SearchScreenState extends State<SearchScreen> {
                   );
                 }
 
+                if (state is SearchInitial) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_outlined,
+                            size: 72,
+                            color: AppColors.textHint,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            'ابحث عن منتجك هنا و ضيفه للعربة',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyLarge.copyWith(
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'اكتب اسم المنتج في مربع البحث علشان نجيبلك النتايج من غير ما نستدعي كل المنتجات عند فتح الصفحة.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
                 if (state is SearchLoaded) {
                   if (state.products.isEmpty) {
                     return Center(
                       child: Text(
-                        _searchController.text.isEmpty
-                            ? 'No products available'
-                            : 'No products found for "${_searchController.text}"',
+                        'No products found for "${_searchController.text}"',
                         style: AppTypography.bodyMedium,
                       ),
                     );

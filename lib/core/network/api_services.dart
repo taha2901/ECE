@@ -23,10 +23,15 @@ class ApiService {
     );
   }
 
-  Future<Response> getProducts({int page = 1}) async {
+  Future<Response> getProducts({int page = 1, String? search}) async {
+    final queryParameters = <String, dynamic>{'page': page};
+    if (search != null && search.isNotEmpty) {
+      queryParameters['search'] = search;
+    }
+
     return await _dio.get(
       ApiConstants.getAllProducts,
-      queryParameters: {'page': page},
+      queryParameters: queryParameters,
     );
   }
 
