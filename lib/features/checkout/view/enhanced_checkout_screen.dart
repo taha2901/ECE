@@ -10,6 +10,7 @@ import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
 import 'package:real_ecommerce/features/checkout/logic/checkout_state.dart';
 import 'package:real_ecommerce/features/checkout/view/checkout_screen_desktop.dart';
 import 'package:real_ecommerce/features/checkout/view/checkout_screen_mobile.dart';
+import 'package:real_ecommerce/features/checkout/view/widgets/checkout_cancel_dialog.dart';
 
 // ═══════════════════════════════════════════════
 // ENHANCED CHECKOUT SCREEN — entry point
@@ -94,30 +95,7 @@ class _EnhancedCheckoutScreenState extends State<EnhancedCheckoutScreen> {
   }
 
   void _handleCancel() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Cancel Checkout?'),
-        content: const Text(
-          'Your progress will be lost.\nAre you sure you want to exit?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Stay'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.go(AppRoutes.cartTotal);
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Yes, Exit'),
-          ),
-        ],
-      ),
-    );
+    showCheckoutCancelDialog(context);
   }
 
   void _handleNext() {

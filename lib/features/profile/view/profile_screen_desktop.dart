@@ -8,13 +8,9 @@ import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/core/widgets/common_widgets.dart';
 import 'package:real_ecommerce/features/address/view/my_addresses_page.dart';
 import 'package:real_ecommerce/features/auth/logic/cubit.dart';
-import 'package:real_ecommerce/features/orders/logic/cubit.dart' as orders;
-import 'package:real_ecommerce/features/orders/logic/states.dart' as orders_state;
-import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
-import 'package:real_ecommerce/features/wishlist/logic/states.dart';
 import 'package:real_ecommerce/features/profile/view/widgets/profile_avatar.dart';
 import 'package:real_ecommerce/features/profile/view/widgets/profile_menu_item.dart';
-import 'package:real_ecommerce/features/profile/view/widgets/profile_stat_item.dart';
+import 'package:real_ecommerce/features/profile/view/widgets/profile_stats_row.dart';
 
 /// Layout الديسكتوب:
 ///   ┌────────────────┬──────────────────────────┐
@@ -64,7 +60,6 @@ class ProfileDesktop extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Sidebar ────────────────────────────
                 SizedBox(
                   width: 280,
                   child: _ProfileSidebar(
@@ -78,8 +73,6 @@ class ProfileDesktop extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xl),
-
-                // ── Main Content ───────────────────────
                 Expanded(
                   child: _ProfileContent(
                     isLoggedIn: isLoggedIn,
@@ -95,9 +88,6 @@ class ProfileDesktop extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════
-// SIDEBAR — avatar + stats + sign out
-// ══════════════════════════════════════════════
 class _ProfileSidebar extends StatelessWidget {
   final String displayName;
   final String subtitle;
@@ -121,7 +111,6 @@ class _ProfileSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Avatar Card
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -140,13 +129,14 @@ class _ProfileSidebar extends StatelessWidget {
                 location: location,
               ),
               const SizedBox(height: AppSpacing.xl),
-              _buildStats(context),
+              ProfileStatsRow(
+                isLoggedIn: isLoggedIn,
+                onShowLoginDialog: onShowLoginDialog,
+              ),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-
-        // Sign Out Card
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -170,53 +160,8 @@ class _ProfileSidebar extends StatelessWidget {
       ],
     );
   }
-
-  Widget _buildStats(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        BlocBuilder<orders.OrdersCubit, orders_state.OrdersState>(
-          builder: (context, orderState) {
-            final ordersCount = orderState is orders_state.OrdersLoaded
-                ? orderState.orders.length
-                : 0;
-            return ProfileStatItem(
-              value: isLoggedIn ? ordersCount.toString() : '0',
-              label: 'Orders',
-              onTap: () => isLoggedIn
-                  ? context.push(AppRoutes.orders)
-                  : onShowLoginDialog(),
-            );
-          },
-        ),
-        const ProfileStatDivider(),
-        BlocBuilder<WishlistCubit, WishlistState>(
-          builder: (context, wishlistState) {
-            final count = wishlistState is WishlistLoaded
-                ? wishlistState.items.length
-                : 0;
-            return ProfileStatItem(
-              value: isLoggedIn ? count.toString() : '0',
-              label: 'Wishlist',
-            );
-          },
-        ),
-        const ProfileStatDivider(),
-        ProfileStatItem(
-          value: isLoggedIn ? '2' : '0',
-          label: 'Addresses',
-          onTap: () => isLoggedIn
-              ? context.push(AppRoutes.myAddresses)
-              : onShowLoginDialog(),
-        ),
-      ],
-    );
-  }
 }
 
-// ══════════════════════════════════════════════
-// CONTENT — menus على اليمين
-// ══════════════════════════════════════════════
 class _ProfileContent extends StatelessWidget {
   final bool isLoggedIn;
   final VoidCallback onShowLoginDialog;
@@ -231,7 +176,6 @@ class _ProfileContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Main Menu Card
         Container(
           decoration: BoxDecoration(
             color: AppColors.white,
@@ -248,10 +192,7 @@ class _ProfileContent extends StatelessWidget {
                   AppSpacing.pagePadding,
                   0,
                 ),
-                child: Text(
-                  'Account',
-                  style: AppTypography.labelLarge,
-                ),
+                child: Text('Account', style: AppTypography.labelLarge),
               ),
               ProfileMenuItem(
                 icon: Icons.shopping_bag_outlined,
@@ -286,8 +227,6 @@ class _ProfileContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-
-        // Support Menu Card
         Container(
           decoration: BoxDecoration(
             color: AppColors.white,

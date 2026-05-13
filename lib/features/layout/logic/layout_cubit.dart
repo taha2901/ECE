@@ -7,7 +7,7 @@ import 'package:real_ecommerce/core/widgets/guest_guard_screen.dart'; // ✅ ا�
 
 import 'package:real_ecommerce/features/home/view/home_screen.dart';
 import 'package:real_ecommerce/features/cart/view/cart_screens.dart';
-import 'package:real_ecommerce/features/layout/layout_states.dart';
+import 'package:real_ecommerce/features/layout/logic/layout_states.dart';
 import 'package:real_ecommerce/features/wishlist/view/wishlist_screen.dart';
 import 'package:real_ecommerce/features/profile/view/profile_screen.dart';
 

@@ -43,7 +43,7 @@ class PaymentCubit extends Cubit<PaymentState> {
 
       result.status == PaymentIntentsStatus.Succeeded
           ? emit(PaymentSuccess())
-          : emit(PaymentFailure('Status: ${result.status?.name}'));
+          : emit(PaymentFailure('Status: ${result.status.name}'));
     } on StripeException catch (e) {
       emit(PaymentFailure(e.error.localizedMessage ?? 'فشل الدفع'));
     } catch (e) {

@@ -4,7 +4,7 @@ import 'package:real_ecommerce/core/constants/app_constants.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
 import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
 import 'package:real_ecommerce/features/checkout/logic/checkout_state.dart';
-import 'package:real_ecommerce/features/checkout/view/widgets/checkout_text_feld.dart';
+import 'package:real_ecommerce/features/checkout/view/widgets/checkout_text_field.dart';
 
 class ShippingStep extends StatelessWidget {
   final TextEditingController addressController;

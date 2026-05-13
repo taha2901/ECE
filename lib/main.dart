@@ -13,11 +13,8 @@ import 'package:real_ecommerce/features/auth/logic/states.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart' as cart;
 import 'package:real_ecommerce/features/checkout/logic/checkout_cubit.dart';
 import 'package:real_ecommerce/features/coupons/logic/cubit.dart';
-import 'package:real_ecommerce/features/home/logic/product_cubit.dart';
-import 'package:real_ecommerce/features/payment/logic/cubit.dart';
 import 'package:real_ecommerce/features/wishlist/logic/cubit.dart';
 import 'package:real_ecommerce/features/orders/logic/cubit.dart' as orders;
-import 'package:real_ecommerce/features/search/logic/search_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,8 +86,6 @@ class _LuxeStoreAppState extends State<LuxeStoreApp> with WidgetsBindingObserver
         BlocProvider<AuthCubit>(
           create: (_) => sl<AuthCubit>()..checkAuthStatus(),
         ),
-        BlocProvider<ProductCubit>(create: (_) => sl<ProductCubit>()),
-        BlocProvider<SearchCubit>(create: (_) => sl<SearchCubit>()),
         BlocProvider<cart.CartCubit>(create: (_) => sl<cart.CartCubit>()),
         BlocProvider<WishlistCubit>(create: (_) => sl<WishlistCubit>()),
         BlocProvider<CouponCubit>(create: (_) => sl<CouponCubit>()),
@@ -99,7 +94,6 @@ class _LuxeStoreAppState extends State<LuxeStoreApp> with WidgetsBindingObserver
         BlocProvider<orders.OrdersCubit>(
           create: (_) => sl<orders.OrdersCubit>(),
         ),
-        BlocProvider<PaymentCubit>(create: (_) => sl<PaymentCubit>()),
       ],
       child: _AppContent(),
     );

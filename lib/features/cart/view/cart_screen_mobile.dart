@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:real_ecommerce/core/constants/app_constants.dart';
-import 'package:real_ecommerce/core/routers/app_router.dart';
 import 'package:real_ecommerce/core/themes/app_colors.dart';
 import 'package:real_ecommerce/core/themes/app_typography.dart';
-import 'package:real_ecommerce/core/widgets/common_widgets.dart';
 import 'package:real_ecommerce/features/cart/logic/cubit.dart';
 import 'package:real_ecommerce/features/cart/logic/states.dart';
 import 'package:real_ecommerce/features/cart/view/widgets/cart_dialogs.dart';
 import 'package:real_ecommerce/features/cart/view/widgets/cart_item_card.dart';
+import 'package:real_ecommerce/features/cart/view/widgets/cart_screen_shared.dart';
 import 'package:real_ecommerce/features/cart/view/widgets/order_summary_box.dart';
-
-// ══════════════════════════════════════════════════════════
-//  CART SCREEN  —  MOBILE
-// ══════════════════════════════════════════════════════════
 
 class CartScreenMobile extends StatefulWidget {
   const CartScreenMobile({super.key});
@@ -57,8 +51,6 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
               ],
             ),
             centerTitle: true,
-
-            // ── زرار مسح الكارت ──────────────────────
             actions: [
               if (state.status == CartStatus.loaded && !state.isEmpty)
                 IconButton(
@@ -71,56 +63,9 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
                 ),
             ],
           ),
-          body: BlocListener<CartCubit, CartState>(
-            listener: (context, state) {
-              if (state.errorMessage != null &&
-                  state.status == CartStatus.loaded) {
-                appScaffoldMessengerKey.currentState
-                  ?..clearSnackBars()
-                  ..showSnackBar(SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.error_outline,
-                            color: Colors.white, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(state.errorMessage!)),
-                      ],
-                    ),
-                    backgroundColor: AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    duration: const Duration(seconds: 3),
-                  ));
-              }
-              if (state.status == CartStatus.loaded &&
-                  state.message == 'Cart cleared') {
-                appScaffoldMessengerKey.currentState
-                  ?..clearSnackBars()
-                  ..showSnackBar(SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.check_circle_outline,
-                            color: Colors.white, size: 18),
-                        SizedBox(width: 8),
-                        Text('Cart cleared successfully'),
-                      ],
-                    ),
-                    backgroundColor: Colors.green.shade600,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ));
-              }
-            },
+          body: CartFeedbackListener(
             child: Builder(
               builder: (context) {
-                // ── Loading ──────────────────────────
                 if (state.status == CartStatus.loading ||
                     state.status == CartStatus.removing) {
                   return const Center(
@@ -128,18 +73,15 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
                   );
                 }
 
-                // ── Error ────────────────────────────
                 if (state.status == CartStatus.error) {
-                  return _ErrorView(
+                  return CartErrorView(
                     message: state.errorMessage,
                     onRetry: () => context.read<CartCubit>().retry(),
                   );
                 }
 
-                // ── Empty ────────────────────────────
-                if (state.isEmpty) return const _EmptyView();
+                if (state.isEmpty) return const CartEmptyView();
 
-                // ── Loaded ───────────────────────────
                 return Column(
                   children: [
                     Expanded(
@@ -162,68 +104,6 @@ class _CartScreenMobileState extends State<CartScreenMobile> {
           ),
         );
       },
-    );
-  }
-}
-
-// ── Empty State ──────────────────────────────────────────
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_cart_outlined,
-              size: 80, color: AppColors.textHint),
-          const SizedBox(height: AppSpacing.lg),
-          Text('Your cart is empty', style: AppTypography.h2),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Add some items to get started',
-            style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.textHint),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          AppButton(
-            onTap: () => context.go(AppRoutes.home),
-            label: 'Continue Shopping',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Error State ──────────────────────────────────────────
-
-class _ErrorView extends StatelessWidget {
-  final String? message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline,
-              size: 60, color: AppColors.textHint),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            message ?? 'Error loading cart',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          AppButton(onTap: onRetry, label: 'Retry'),
-        ],
-      ),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:real_ecommerce/core/di/service_locator.dart';
 import 'package:real_ecommerce/features/auth/view/forgot_password_screen.dart';
 import 'package:real_ecommerce/features/auth/view/login.dart';
 import 'package:real_ecommerce/features/auth/view/otp_screen.dart';
@@ -9,13 +11,15 @@ import 'package:real_ecommerce/features/checkout/view/enhanced_checkout_screen.d
 import 'package:real_ecommerce/features/checkout/view/checkout_screen.dart';
 import 'package:real_ecommerce/features/checkout/view/add_address_screen.dart';
 import 'package:real_ecommerce/features/home/view/product_detail_screen.dart';
-import 'package:real_ecommerce/features/layout/layout_screen.dart';
+import 'package:real_ecommerce/features/layout/view/layout_screen.dart';
 import 'package:real_ecommerce/features/offers/view/offers_screen.dart';
 import 'package:real_ecommerce/features/onboarding/onboarding_screen.dart';
 import 'package:real_ecommerce/features/orders/view/orders_screen.dart';
 import 'package:real_ecommerce/features/cart/view/cart_screens.dart';
-import 'package:real_ecommerce/features/payment/view/payment_screen.dart';
 import 'package:real_ecommerce/features/payment/view/card_payment_screen.dart';
+import 'package:real_ecommerce/features/payment/view/payment_success_screen.dart';
+import 'package:real_ecommerce/features/payment/logic/cubit.dart';
+import 'package:real_ecommerce/features/search/logic/search_cubit.dart';
 import 'package:real_ecommerce/features/splash/splash_screen.dart';
 import 'package:real_ecommerce/features/profile/view/profile_screen.dart';
 import 'package:real_ecommerce/features/search/view/search_screen.dart';
@@ -119,8 +123,18 @@ final appRouter = GoRouter(
     // ✅ الهوم (LayoutScreen) — متاح للجميع
     GoRoute(path: AppRoutes.home, builder: (_, __) => const LayoutScreen()),
     GoRoute(
+      path: AppRoutes.search,
+      builder: (_, __) => BlocProvider<SearchCubit>(
+        create: (_) => sl<SearchCubit>(),
+        child: const SearchScreen(),
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.payment,
-      builder: (_, __) => const CardPaymentScreen(),
+      builder: (_, __) => BlocProvider<PaymentCubit>(
+        create: (_) => sl<PaymentCubit>(),
+        child: const CardPaymentScreen(),
+      ),
     ),
 
     // Auth screens
@@ -160,11 +174,6 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: AppRoutes.payment,
-      builder: (_, __) => const CardPaymentScreen(),
-    ),
-
-    GoRoute(
       path: AppRoutes.paymentSuccess,
       builder: (_, __) => const PaymentSuccessScreen(),
     ),
@@ -185,11 +194,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.myAddresses,
       builder: (_, __) => const AddressScreen(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.search,
-      builder: (_, __) => const SearchScreen(),
     ),
 
     GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
